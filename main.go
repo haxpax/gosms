@@ -20,8 +20,11 @@ func main() {
 
 	err = InitModem(comport)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error opening port: ", err.Error())
+		os.Exit(1)
 	}
+
+	InitWorker()
 
 	err = InitServer(serverhost, serverport)
 	if err != nil {

@@ -40,6 +40,9 @@ func (m *GSMModem) sendCommand(command string) {
 }
 
 func SendSMS(mobile string, message string) {
+	// Fire and Forget
+	// and hope that the SMS gets delivered
+
 	// Put Modem in SMS Text Mode
 	modem.sendCommand("AT+CMGF=1")
 

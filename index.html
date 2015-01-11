@@ -28,7 +28,7 @@
 			<h1 class="title">GoSMS</h1>
 			<p>send sms using gsm modem</p>
 			<div class="row">
-				<form name="testSMS" id="testSMS" action="/test" method="post">
+				<form name="testSMS" id="testSMS" action="/api/sms/" method="post">
 					<div class="form-group">
 						<label for="mobile">Mobile</label>
 						<input type="text" class="form-control" name="mobile" placeholder="+919890098900">
@@ -47,9 +47,10 @@
 		</div>
 		<script type="text/javascript">
 			$(function() {
-				$("#testSMS").submit(function(){
+				$("#testSMS").submit(function() {
+					var url = $(this).attr('action');
 					var formData = $(this).serialize();
-					$.post("/testsms/", formData, function(resp){
+					$.post(url, formData, function(resp){
 						
 					});
 					return false;				

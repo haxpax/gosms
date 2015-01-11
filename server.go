@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/satori/go.uuid"
 	"html/template"
 	"net/http"
 )
@@ -26,10 +27,21 @@ func testSMSHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
+func SMSAPIHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	mobile := r.FormValue("mobile")
+	message := r.FormValue("message")
+	uuid := uuid.NewV1()
+	sms := &SMS{uuid: uuid.String(), mobile: mobile, body: message}
+	EnqueueMessage(sms)
+	w.Write([]byte("OK"))
+}
+
 func InitServer(host string, port string) error {
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/testsms/", testSMSHandler)
+	http.HandleFunc("/api/sms/", SMSAPIHandler)
 
 	http.HandleFunc("/assets/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, r.URL.Path[1:])

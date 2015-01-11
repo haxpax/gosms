@@ -24,7 +24,9 @@ func getConfig(configFilePath string) (ini.File, error) {
 func testConfig(appConfig ini.File) (bool, error) {
 	//test if required parameters are present and are valid
 
-	required_fields := []setting{{"SETTINGS", "COMPORT"},
+	required_fields := []setting{{"SETTINGS", "SERVERHOST"},
+		{"SETTINGS", "SERVERPORT"},
+		{"SETTINGS", "COMPORT"},
 		{"SETTINGS", "BAUDRATE"},
 		{"SETTINGS", "RETRIES"},
 	}

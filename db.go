@@ -59,7 +59,8 @@ func updateMessageStatus(sms SMS) error {
 }
 
 func getPendingMessages() ([]SMS, error) {
-	rows, err := db.Query("SELECT uuid, message, mobile, status FROM messages WHERE status=" + string(SMSPending))
+	query := fmt.Sprintf("SELECT uuid, message, mobile, status FROM messages WHERE status=%v", SMSPending)
+	rows, err := db.Query(query)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

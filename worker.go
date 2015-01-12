@@ -25,6 +25,17 @@ func InitWorker() {
 	// Buffered Channel with capacity of 100 Messages
 	messages = make(chan SMS, 100)
 
+	// Load pending messages from database
+	pendingMsgs, err := getPendingMessages()
+	if err == nil {
+		for _, msg := range pendingMsgs {
+			//should not use EnqueueMessage here
+			//EnqueueMessage will try to insert this message again, which will cause
+			//integrity error
+			messages <- msg
+		}
+	}
+
 	// Start processing messages from queue
 	go processMessages()
 }
@@ -32,6 +43,7 @@ func InitWorker() {
 func EnqueueMessage(message *SMS) {
 	fmt.Println("Queuing " + message.uuid)
 	messages <- *message
+	insertMessage(message)
 }
 
 func processMessages() {
@@ -39,6 +51,13 @@ func processMessages() {
 		message := <-messages
 		fmt.Println("processing: " + message.uuid)
 		SendSMS(message.mobile, message.body)
+		/*
+		   TODO: modify this block to check result of SendSMS and change status
+		   code accordingly
+		*/
+		message.status = SMSProcessed
+		updateMessageStatus(message)
+
 		time.Sleep(5 * time.Second)
 	}
 }

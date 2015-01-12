@@ -14,6 +14,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = initDB("sqlite3", "db.sqlite")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
 	serverhost, _ := appConfig.Get("SETTINGS", "SERVERHOST")
 	serverport, _ := appConfig.Get("SETTINGS", "SERVERPORT")
 	comport, _ := appConfig.Get("SETTINGS", "COMPORT")

@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	ini "github.com/vaughan0/go-ini"
+	"strconv"
 	"strings"
 )
 
@@ -24,20 +26,39 @@ func getConfig(configFilePath string) (ini.File, error) {
 func testConfig(appConfig ini.File) (bool, error) {
 	//test if required parameters are present and are valid
 
-	required_fields := []setting{{"SETTINGS", "SERVERHOST"},
+	requiredFields := []setting{{"SETTINGS", "SERVERHOST"},
 		{"SETTINGS", "SERVERPORT"},
-		{"SETTINGS", "COMPORT"},
-		{"SETTINGS", "BAUDRATE"},
 		{"SETTINGS", "RETRIES"},
+		{"SETTINGS", "DEVICES"},
 	}
 
-	for _, c := range required_fields {
+	for _, c := range requiredFields {
 		v, ok := appConfig.Get(c[0], c[1])
 		if !ok || strings.TrimSpace(v) == "" {
 			return false, errors.New("Fatal: " + c[1] + " is not set")
 		}
-
 	}
+
+	//now make sure all the devices are have required settings
+	tno, _ := appConfig.Get("SETTINGS", "DEVICES")
+	noOfDevices, _ := strconv.Atoi(tno)
+	requiredFields = []setting{}
+
+	for i := 0; i <= noOfDevices; i++ {
+		d := fmt.Sprintf("DEVICE%v", i)
+		sCom := setting{d, "COMPORT"}
+		sBaud := setting{d, "BAUDRATE"}
+		requiredFields = append(requiredFields, sCom)
+		requiredFields = append(requiredFields, sBaud)
+	}
+
+	for _, c := range requiredFields {
+		v, ok := appConfig.Get(c[0], c[1])
+		if !ok || strings.TrimSpace(v) == "" {
+			return false, errors.New(strings.Join([]string{"Fatal:", c[0], c[1], "is not set"}, " "))
+		}
+	}
+
 	return true, nil
 }
 

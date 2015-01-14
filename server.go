@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
 	"html/template"
 	"net/http"
@@ -32,20 +34,47 @@ func SMSAPIHandler(w http.ResponseWriter, r *http.Request) {
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
 	uuid := uuid.NewV1()
-	sms := &SMS{uuid: uuid.String(), mobile: mobile, body: message}
+	sms := &SMS{UUID: uuid.String(), Mobile: mobile, Body: message}
 	EnqueueMessage(sms)
 	w.Write([]byte("OK"))
 }
 
+type SMSData struct {
+	Messages []SMS `json:"messages"`
+}
+
+func SMSDataAPIHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	startWith := vars["start"]
+	filter := "LIMIT 10 OFFSET " + startWith
+	messages, _ := getMessages(filter)
+	smsdata := SMSData{
+		Messages: messages,
+	}
+	var toWrite []byte
+	toWrite, err := json.Marshal(smsdata)
+	if err != nil {
+		fmt.Println(err)
+		toWrite = []byte("{\"messages\":[]}")
+	}
+	w.Header().Set("Content-type", "application/json")
+	w.Write(toWrite)
+}
+
 func InitServer(host string, port string) error {
 
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/testsms/", testSMSHandler)
-	http.HandleFunc("/api/sms/", SMSAPIHandler)
+	r := mux.NewRouter()
+	r.StrictSlash(true)
 
-	http.HandleFunc("/assets/", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/", indexHandler)
+	r.HandleFunc("/testsms/", testSMSHandler)
+	r.HandleFunc("/api/sms/", SMSAPIHandler)
+	r.HandleFunc(`/api/smsdata/{start:[0-9]+}`, SMSDataAPIHandler)
+
+	r.HandleFunc("/assets/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, r.URL.Path[1:])
 	})
+	http.Handle("/", r)
 
 	bind := fmt.Sprintf("%s:%s", host, port)
 	fmt.Printf("listening on %s...", bind)

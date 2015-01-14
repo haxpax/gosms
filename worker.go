@@ -12,10 +12,10 @@ const (
 )
 
 type SMS struct {
-	uuid   string
-	mobile string
-	body   string
-	status int
+	UUID   string `json:"uuid"`
+	Mobile string `json:"mobile"`
+	Body   string `json:"body"`
+	Status int    `json:"status"`
 }
 
 var messages chan SMS
@@ -41,7 +41,7 @@ func InitWorker() {
 }
 
 func EnqueueMessage(message *SMS) {
-	fmt.Println("Queuing " + message.uuid)
+	fmt.Println("Queuing " + message.UUID)
 	messages <- *message
 	insertMessage(message)
 }
@@ -49,13 +49,13 @@ func EnqueueMessage(message *SMS) {
 func processMessages() {
 	for {
 		message := <-messages
-		fmt.Println("processing: " + message.uuid)
-		SendSMS(message.mobile, message.body)
+		fmt.Println("processing: " + message.UUID)
+		SendSMS(message.Mobile, message.Body)
 		/*
 		   TODO: modify this block to check result of SendSMS and change status
 		   code accordingly
 		*/
-		message.status = SMSProcessed
+		message.Status = SMSProcessed
 		updateMessageStatus(message)
 
 		time.Sleep(5 * time.Second)

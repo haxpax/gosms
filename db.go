@@ -27,7 +27,7 @@ func insertMessage(sms *SMS) error {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(sms.uuid, sms.body, sms.mobile)
+	_, err = stmt.Exec(sms.UUID, sms.Body, sms.Mobile)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -48,7 +48,7 @@ func updateMessageStatus(sms SMS) error {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(sms.status)
+	_, err = stmt.Exec(sms.Status)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -71,7 +71,32 @@ func getPendingMessages() ([]SMS, error) {
 
 	for rows.Next() {
 		sms := SMS{}
-		rows.Scan(&sms.uuid, &sms.body, &sms.mobile, &sms.status)
+		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status)
+		messages = append(messages, sms)
+	}
+	rows.Close()
+	return messages, nil
+}
+
+func getMessages(filter string) ([]SMS, error) {
+	/*
+	   expecting filter as empty string or WHERE clauses,
+	   simply append it to the query to get desired set out of database
+	*/
+	query := fmt.Sprintf("SELECT uuid, message, mobile, status FROM messages %v", filter)
+	fmt.Println(query)
+	rows, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []SMS
+
+	for rows.Next() {
+		sms := SMS{}
+		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status)
 		messages = append(messages, sms)
 	}
 	rows.Close()

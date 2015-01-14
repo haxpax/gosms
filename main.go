@@ -23,7 +23,7 @@ func main() {
 
 	serverhost, _ := appConfig.Get("SETTINGS", "SERVERHOST")
 	serverport, _ := appConfig.Get("SETTINGS", "SERVERPORT")
-	comport, _ := appConfig.Get("SETTINGS", "COMPORT")
+	comport, _ := appConfig.Get("DEVICE0", "COMPORT")
 
 	err = InitModem(comport)
 	if err != nil {

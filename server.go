@@ -61,6 +61,12 @@ func SMSDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(toWrite)
 }
 
+func handleStatic(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	static := vars["path"]
+	http.ServeFile(w, r, filepath.Join("./assets", static))
+}
+
 func InitServer(host string, port string) error {
 
 	r := mux.NewRouter()
@@ -70,10 +76,8 @@ func InitServer(host string, port string) error {
 	r.HandleFunc("/testsms/", testSMSHandler)
 	r.HandleFunc("/api/sms/", SMSAPIHandler)
 	r.HandleFunc(`/api/smsdata/{start:[0-9]+}`, SMSDataAPIHandler)
+	r.HandleFunc(`/assets/{path:[a-zA-Z0-9=\-\/\.]+}`, handleStatic)
 
-	r.HandleFunc("/assets/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, r.URL.Path[1:])
-	})
 	http.Handle("/", r)
 
 	bind := fmt.Sprintf("%s:%s", host, port)

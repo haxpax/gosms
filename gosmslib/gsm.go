@@ -17,6 +17,7 @@ type GSMModem struct {
 var modem *GSMModem
 
 func (m *GSMModem) Connect() error {
+	log.Println("--- Connect")
 	c := &serial.Config{Name: m.port, Baud: m.baud}
 	s, err := serial.OpenPort(c)
 	if err == nil {
@@ -27,6 +28,7 @@ func (m *GSMModem) Connect() error {
 }
 
 func (m *GSMModem) SendCommand(command string) {
+	log.Println("--- SendCommand: ", command)
 	time.Sleep(time.Duration(500 * time.Millisecond))
 	_, err := m.conn.Write([]byte(command + "\r"))
 	if err != nil {
@@ -35,6 +37,7 @@ func (m *GSMModem) SendCommand(command string) {
 }
 
 func InitModem(comport string) error {
+	log.Println("--- InitModem ", comport)
 	modem = &GSMModem{port: comport, baud: 115200}
 	return modem.Connect()
 }
@@ -42,6 +45,8 @@ func InitModem(comport string) error {
 func SendSMS(mobile string, message string) {
 	// Fire and Forget
 	// and hope that the SMS gets delivered
+
+	log.Println("--- SendSMS ", mobile, message)
 
 	// Put Modem in SMS Text Mode
 	modem.SendCommand("AT+CMGF=1")

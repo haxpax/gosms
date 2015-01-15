@@ -1,7 +1,7 @@
 package gosms
 
 import (
-	"fmt"
+	"log"
 	"time"
 )
 
@@ -21,13 +21,14 @@ type SMS struct {
 var messages chan SMS
 
 func InitWorker() {
-
+	log.Println("--- InitWorker")
 	// Buffered Channel with capacity of 100 Messages
 	messages = make(chan SMS, 100)
 
 	// Load pending messages from database
 	pendingMsgs, err := getPendingMessages()
 	if err == nil {
+		log.Println(len(pendingMsgs), " pending messages found")
 		for _, msg := range pendingMsgs {
 			//should not use EnqueueMessage here
 			//EnqueueMessage will try to insert this message again, which will cause
@@ -41,7 +42,7 @@ func InitWorker() {
 }
 
 func EnqueueMessage(message *SMS) {
-	fmt.Println("Queuing " + message.UUID)
+	log.Println("Queuing: ", message)
 	messages <- *message
 	insertMessage(message)
 }
@@ -49,7 +50,7 @@ func EnqueueMessage(message *SMS) {
 func processMessages() {
 	for {
 		message := <-messages
-		fmt.Println("processing: " + message.UUID)
+		log.Println("processing: "+message.UUID, time.Now())
 		SendSMS(message.Mobile, message.Body)
 		/*
 		   TODO: modify this block to check result of SendSMS and change status

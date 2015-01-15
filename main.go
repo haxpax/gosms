@@ -1,23 +1,24 @@
 package main
 
 import (
-	"fmt"
 	"github.com/Omie/gosms/gosmslib"
+	"log"
 	"os"
 )
 
 func main() {
 
+	log.Println("Initializing gosms")
 	//load the config, abort if required config is not preset
 	appConfig, err := gosms.GetConfig("conf.ini")
 	if err != nil {
-		fmt.Println("Invalid config: ", err.Error())
+		log.Println("Invalid config: ", err.Error(), " Aborting")
 		os.Exit(1)
 	}
 
 	db, err := gosms.InitDB("sqlite3", "db.sqlite")
 	if err != nil {
-		fmt.Println(err)
+		log.Println("Error initializing database: ", err, " Aborting")
 		os.Exit(1)
 	}
 	defer db.Close()
@@ -28,14 +29,17 @@ func main() {
 
 	err = gosms.InitModem(comport)
 	if err != nil {
-		fmt.Println("Error opening port: ", err.Error())
+		log.Println("Error initializing modem: ", err.Error(), " Aborting")
 		os.Exit(1)
 	}
 
+	log.Println("Initializing worker")
 	gosms.InitWorker()
 
+	log.Println("Initializing server")
 	err = gosms.InitServer(serverhost, serverport)
 	if err != nil {
-		panic(err)
+		log.Println("Error starting server: ", err.Error(), " Aborting")
+		os.Exit(1)
 	}
 }

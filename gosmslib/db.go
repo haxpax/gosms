@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"log"
 )
 
 var db *sql.DB
@@ -15,21 +16,21 @@ func InitDB(driver, dbname string) (*sql.DB, error) {
 }
 
 func insertMessage(sms *SMS) error {
-
+	log.Println("--- insertMessage ", sms)
 	tx, err := db.Begin()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	stmt, err := tx.Prepare("INSERT INTO messages(uuid, message, mobile) VALUES(?, ?, ?)")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(sms.UUID, sms.Body, sms.Mobile)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	tx.Commit()
@@ -37,32 +38,35 @@ func insertMessage(sms *SMS) error {
 }
 
 func updateMessageStatus(sms SMS) error {
+	log.Println("--- updateMessageStatus ", sms)
 	tx, err := db.Begin()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	stmt, err := tx.Prepare("UPDATE messages SET status=?")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(sms.Status)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	tx.Commit()
 	return nil
-
 }
 
 func getPendingMessages() ([]SMS, error) {
+	log.Println("--- getPendingMessages ")
 	query := fmt.Sprintf("SELECT uuid, message, mobile, status FROM messages WHERE status=%v", SMSPending)
+	log.Println(query)
+
 	rows, err := db.Query(query)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -83,11 +87,13 @@ func getMessages(filter string) ([]SMS, error) {
 	   expecting filter as empty string or WHERE clauses,
 	   simply append it to the query to get desired set out of database
 	*/
+	log.Println("--- getPendingMessages ")
 	query := fmt.Sprintf("SELECT uuid, message, mobile, status FROM messages %v", filter)
-	fmt.Println(query)
+	log.Println(query)
+
 	rows, err := db.Query(query)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	defer rows.Close()

@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
 	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
 )
@@ -25,16 +26,19 @@ var templates = template.Must(template.ParseFiles("gosmslib/templates/index.html
 
 //sms log viewer
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("--- indexHandler")
 	templates.ExecuteTemplate(w, "smsdata.html", nil)
 }
 
 //test sending sms
 func testSMSHandlerGet(w http.ResponseWriter, r *http.Request) {
+	log.Println("--- testSMSHandlerGet")
 	templates.ExecuteTemplate(w, "index.html", nil)
 }
 
 //handle test sms POST request
 func testSMSHandlerPost(w http.ResponseWriter, r *http.Request) {
+	log.Println("--- testSMSHandlerPost")
 	r.ParseForm()
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
@@ -56,6 +60,7 @@ func handleStatic(w http.ResponseWriter, r *http.Request) {
 
 //push sms, allowed methods: POST
 func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("--- smsAPIHandler")
 	r.ParseForm()
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
@@ -67,6 +72,7 @@ func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
 
 //dumps data, used by log view. Methods allowed: GET
 func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("--- smsDataAPIHandler")
 	vars := mux.Vars(r)
 	startWith := vars["start"]
 	filter := "LIMIT 10 OFFSET " + startWith
@@ -91,6 +97,7 @@ func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 /* end API views */
 
 func InitServer(host string, port string) error {
+	log.Println("--- InitServer ", host, port)
 
 	r := mux.NewRouter()
 	r.StrictSlash(true)
@@ -112,7 +119,7 @@ func InitServer(host string, port string) error {
 	http.Handle("/", r)
 
 	bind := fmt.Sprintf("%s:%s", host, port)
-	fmt.Printf("listening on %s...", bind)
+	log.Println("listening on: ", bind)
 	return http.ListenAndServe(bind, nil)
 
 }

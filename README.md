@@ -61,3 +61,11 @@ planned features
 - support multiple devices with load balancing
 
 
+building on windows
+-------------------
+- go get `github.com/haxpax/gosms`
+- Setup GCC for go-sqlite3 package
+	- Download MinGW from http://sourceforge.net/projects/mingw/
+	- Add `C:\MinGW\bin` to PATH
+	- run `mingw-get install gcc` from command line
+- go build

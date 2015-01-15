@@ -44,13 +44,13 @@ func updateMessageStatus(sms SMS) error {
 		log.Println(err)
 		return err
 	}
-	stmt, err := tx.Prepare("UPDATE messages SET status=?")
+	stmt, err := tx.Prepare("UPDATE messages SET status=? WHERE uuid=?")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(sms.Status)
+	_, err = stmt.Exec(sms.Status, sms.UUID)
 	if err != nil {
 		log.Println(err)
 		return err

@@ -1,4 +1,4 @@
-package main
+package gosms
 
 import (
 	"github.com/tarm/goserial"
@@ -26,12 +26,7 @@ func (m *GSMModem) Connect() error {
 	return err
 }
 
-func InitModem(comport string) error {
-	modem = &GSMModem{port: comport, baud: 115200}
-	return modem.Connect()
-}
-
-func (m *GSMModem) sendCommand(command string) {
+func (m *GSMModem) SendCommand(command string) {
 	time.Sleep(time.Duration(500 * time.Millisecond))
 	_, err := m.conn.Write([]byte(command + "\r"))
 	if err != nil {
@@ -39,15 +34,20 @@ func (m *GSMModem) sendCommand(command string) {
 	}
 }
 
+func InitModem(comport string) error {
+	modem = &GSMModem{port: comport, baud: 115200}
+	return modem.Connect()
+}
+
 func SendSMS(mobile string, message string) {
 	// Fire and Forget
 	// and hope that the SMS gets delivered
 
 	// Put Modem in SMS Text Mode
-	modem.sendCommand("AT+CMGF=1")
+	modem.SendCommand("AT+CMGF=1")
 
-	modem.sendCommand("AT+CMGS=\"" + mobile + "\"")
-	modem.sendCommand(message)
+	modem.SendCommand("AT+CMGS=\"" + mobile + "\"")
+	modem.SendCommand(message)
 	// EOM CTRL-Z
-	modem.sendCommand(string(26))
+	modem.SendCommand(string(26))
 }

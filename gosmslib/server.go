@@ -1,4 +1,4 @@
-package main
+package gosms
 
 import (
 	"encoding/json"
@@ -10,22 +10,30 @@ import (
 	"path/filepath"
 )
 
-// Cache templates
-var templates = template.Must(template.ParseFiles("index.html", "smsdata.html"))
+type SMSData struct {
+	Messages             []SMS  `json:"messages"`
+	IDisplayStart        string `json:"iDisplayStart"`
+	IDisplayLength       int    `json:"iDisplayLength"`
+	ITotalRecords        int    `json:"iTotalRecords"`
+	ITotalDisplayRecords int    `json:"iTotalDisplayRecords"`
+}
 
+// Cache templates
+var templates = template.Must(template.ParseFiles("gosmslib/templates/index.html", "gosmslib/templates/smsdata.html"))
+
+/* web views */
+
+//sms log viewer
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	// 404 for all other url path
-	if r.URL.Path[1:] != "" {
-		http.NotFound(w, r)
-		return
-	}
 	templates.ExecuteTemplate(w, "smsdata.html", nil)
 }
 
+//test sending sms
 func testSMSHandlerGet(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "index.html", nil)
 }
 
+//handle test sms POST request
 func testSMSHandlerPost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	mobile := r.FormValue("mobile")
@@ -34,7 +42,20 @@ func testSMSHandlerPost(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-func SMSAPIHandler(w http.ResponseWriter, r *http.Request) {
+//handle all static files based on specified path
+//for now its /assets
+func handleStatic(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	static := vars["path"]
+	http.ServeFile(w, r, filepath.Join("./gosmslib/assets", static))
+}
+
+/* end web views */
+
+/* API views */
+
+//push sms, allowed methods: POST
+func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
@@ -44,15 +65,8 @@ func SMSAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-type SMSData struct {
-	Messages             []SMS  `json:"messages"`
-	IDisplayStart        string `json:"iDisplayStart"`
-	IDisplayLength       int    `json:"iDisplayLength"`
-	ITotalRecords        int    `json:"iTotalRecords"`
-	ITotalDisplayRecords int    `json:"iTotalDisplayRecords"`
-}
-
-func SMSDataAPIHandler(w http.ResponseWriter, r *http.Request) {
+//dumps data, used by log view. Methods allowed: GET
+func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	startWith := vars["start"]
 	filter := "LIMIT 10 OFFSET " + startWith
@@ -74,11 +88,7 @@ func SMSDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(toWrite)
 }
 
-func handleStatic(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	static := vars["path"]
-	http.ServeFile(w, r, filepath.Join("./assets", static))
-}
+/* end API views */
 
 func InitServer(host string, port string) error {
 
@@ -87,13 +97,17 @@ func InitServer(host string, port string) error {
 
 	r.HandleFunc("/", indexHandler)
 
+	//handle static files
+	r.HandleFunc(`/assets/{path:[a-zA-Z0-9=\-\/\.\_]+}`, handleStatic)
+
+	//get rid of this view once done testing
 	testsms := r.Path("/testsms/").Subrouter()
 	testsms.Methods("GET").HandlerFunc(testSMSHandlerGet)
 	testsms.Methods("POST").HandlerFunc(testSMSHandlerPost)
 
-	r.HandleFunc("/api/sms/", SMSAPIHandler)
-	r.HandleFunc(`/api/smsdata/{start:[0-9]+}`, SMSDataAPIHandler)
-	r.HandleFunc(`/assets/{path:[a-zA-Z0-9=\-\/\.\_]+}`, handleStatic)
+	//all API views
+	r.HandleFunc("/api/sms/", smsAPIHandler)
+	r.HandleFunc(`/api/smsdata/{start:[0-9]+}`, smsDataAPIHandler)
 
 	http.Handle("/", r)
 

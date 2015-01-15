@@ -1,4 +1,4 @@
-package main
+package gosms
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 /* ===== Application Configuration ===== */
 type setting []string
 
-func getConfig(configFilePath string) (ini.File, error) {
+func GetConfig(configFilePath string) (ini.File, error) {
 	appConfig, err := ini.LoadFile(configFilePath)
 	if err != nil {
 		return nil, err

@@ -2,19 +2,20 @@ package main
 
 import (
 	"fmt"
+	"github.com/Omie/gosms/gosmslib"
 	"os"
 )
 
 func main() {
 
 	//load the config, abort if required config is not preset
-	appConfig, err := getConfig("conf.ini")
+	appConfig, err := gosms.GetConfig("conf.ini")
 	if err != nil {
 		fmt.Println("Invalid config: ", err.Error())
 		os.Exit(1)
 	}
 
-	err = initDB("sqlite3", "db.sqlite")
+	db, err := gosms.InitDB("sqlite3", "db.sqlite")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -25,15 +26,15 @@ func main() {
 	serverport, _ := appConfig.Get("SETTINGS", "SERVERPORT")
 	comport, _ := appConfig.Get("DEVICE0", "COMPORT")
 
-	err = InitModem(comport)
+	err = gosms.InitModem(comport)
 	if err != nil {
 		fmt.Println("Error opening port: ", err.Error())
 		os.Exit(1)
 	}
 
-	InitWorker()
+	gosms.InitWorker()
 
-	err = InitServer(serverhost, serverport)
+	err = gosms.InitServer(serverhost, serverport)
 	if err != nil {
 		panic(err)
 	}

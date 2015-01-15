@@ -1,4 +1,4 @@
-package main
+package gosms
 
 import (
 	"database/sql"
@@ -8,10 +8,10 @@ import (
 
 var db *sql.DB
 
-func initDB(driver, dbname string) error {
+func InitDB(driver, dbname string) (*sql.DB, error) {
 	var err error
 	db, err = sql.Open(driver, dbname)
-	return err
+	return db, err
 }
 
 func insertMessage(sms *SMS) error {

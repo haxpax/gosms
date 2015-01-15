@@ -1,4 +1,4 @@
-package main
+package gosms
 
 import (
 	"fmt"

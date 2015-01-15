@@ -82,7 +82,7 @@ func getPendingMessages() ([]SMS, error) {
 	return messages, nil
 }
 
-func getMessages(filter string) ([]SMS, error) {
+func GetMessages(filter string) ([]SMS, error) {
 	/*
 	   expecting filter as empty string or WHERE clauses,
 	   simply append it to the query to get desired set out of database

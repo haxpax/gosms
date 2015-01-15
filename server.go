@@ -7,10 +7,11 @@ import (
 	"github.com/satori/go.uuid"
 	"html/template"
 	"net/http"
+	"path/filepath"
 )
 
 // Cache templates
-var templates = template.Must(template.ParseFiles("index.html"))
+var templates = template.Must(template.ParseFiles("index.html", "smsdata.html"))
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// 404 for all other url path
@@ -18,10 +19,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	templates.ExecuteTemplate(w, "smsdata.html", nil)
+}
+
+func testSMSHandlerGet(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "index.html", nil)
 }
 
-func testSMSHandler(w http.ResponseWriter, r *http.Request) {
+func testSMSHandlerPost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
@@ -40,7 +45,11 @@ func SMSAPIHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type SMSData struct {
-	Messages []SMS `json:"messages"`
+	Messages             []SMS  `json:"messages"`
+	IDisplayStart        string `json:"iDisplayStart"`
+	IDisplayLength       int    `json:"iDisplayLength"`
+	ITotalRecords        int    `json:"iTotalRecords"`
+	ITotalDisplayRecords int    `json:"iTotalDisplayRecords"`
 }
 
 func SMSDataAPIHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +58,11 @@ func SMSDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	filter := "LIMIT 10 OFFSET " + startWith
 	messages, _ := getMessages(filter)
 	smsdata := SMSData{
-		Messages: messages,
+		Messages:             messages,
+		IDisplayStart:        startWith,
+		IDisplayLength:       10,
+		ITotalRecords:        len(messages),
+		ITotalDisplayRecords: len(messages),
 	}
 	var toWrite []byte
 	toWrite, err := json.Marshal(smsdata)
@@ -73,10 +86,14 @@ func InitServer(host string, port string) error {
 	r.StrictSlash(true)
 
 	r.HandleFunc("/", indexHandler)
-	r.HandleFunc("/testsms/", testSMSHandler)
+
+	testsms := r.Path("/testsms/").Subrouter()
+	testsms.Methods("GET").HandlerFunc(testSMSHandlerGet)
+	testsms.Methods("POST").HandlerFunc(testSMSHandlerPost)
+
 	r.HandleFunc("/api/sms/", SMSAPIHandler)
 	r.HandleFunc(`/api/smsdata/{start:[0-9]+}`, SMSDataAPIHandler)
-	r.HandleFunc(`/assets/{path:[a-zA-Z0-9=\-\/\.]+}`, handleStatic)
+	r.HandleFunc(`/assets/{path:[a-zA-Z0-9=\-\/\.\_]+}`, handleStatic)
 
 	http.Handle("/", r)
 

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="assets/favicon.ico">
+
+    <title>Go SMS</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/dataTables.bootstrap.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+    <div class="container">
+      <h1 class="title">GoSMS</h1>
+      <p>Message logs</p>
+      <div class="row">
+        <div class="col-md-12">
+          <table class="table" id="smsdata">
+            <thead>
+              <tr>
+                <th>mobile</th>
+                <th>body</th>
+                <th>uuid</th>
+                <th>status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div> <!-- /col-md-12 -->
+      </div> <!-- /row -->
+    </div> <!-- /container -->
+    <div class="footer"></div>
+
+    <script src="assets/js/jquery-1.11.2.min.js"></script>
+    <script src="assets/js/jquery.dataTables.min.js"></script>
+    <script src="assets/js/dataTables.bootstrap.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function(){
+         $('#smsdata').dataTable( {
+          "ajax" : "/api/smsdata/0", //first page
+          "sAjaxDataProp": "messages",
+          "bServerSide": true,
+          "bProcessing": true,
+          "columns": [
+              { "data": "mobile" },
+              { "data": "body" },
+              { "data": "uuid" },
+              { "data": "status",
+                "mRender": function( data, type, full ) {
+                  if(data == 0)
+                    return "Pending";
+                  else if(data == 1)
+                    return "Processed";
+                  return "Error";
+                },
+                bUseRendered: false
+              }
+          ]
+        });
+      });
+    </script>
+  </body>
+</html>
+

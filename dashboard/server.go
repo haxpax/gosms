@@ -1,8 +1,9 @@
-package gosms
+package main
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Omie/gosms"
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
 	"html/template"
@@ -12,15 +13,15 @@ import (
 )
 
 type SMSData struct {
-	Messages             []SMS  `json:"messages"`
-	IDisplayStart        string `json:"iDisplayStart"`
-	IDisplayLength       int    `json:"iDisplayLength"`
-	ITotalRecords        int    `json:"iTotalRecords"`
-	ITotalDisplayRecords int    `json:"iTotalDisplayRecords"`
+	Messages             []gosms.SMS `json:"messages"`
+	IDisplayStart        string      `json:"iDisplayStart"`
+	IDisplayLength       int         `json:"iDisplayLength"`
+	ITotalRecords        int         `json:"iTotalRecords"`
+	ITotalDisplayRecords int         `json:"iTotalDisplayRecords"`
 }
 
 // Cache templates
-var templates = template.Must(template.ParseFiles("gosmslib/templates/index.html", "gosmslib/templates/smsdata.html"))
+var templates = template.Must(template.ParseFiles("./templates/index.html", "./templates/smsdata.html"))
 
 /* web views */
 
@@ -42,7 +43,7 @@ func testSMSHandlerPost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
-	SendSMS(mobile, message)
+	gosms.SendSMS(mobile, message)
 	w.Write([]byte("OK"))
 }
 
@@ -51,7 +52,7 @@ func testSMSHandlerPost(w http.ResponseWriter, r *http.Request) {
 func handleStatic(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	static := vars["path"]
-	http.ServeFile(w, r, filepath.Join("./gosmslib/assets", static))
+	http.ServeFile(w, r, filepath.Join("./assets", static))
 }
 
 /* end web views */
@@ -65,8 +66,8 @@ func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
 	uuid := uuid.NewV1()
-	sms := &SMS{UUID: uuid.String(), Mobile: mobile, Body: message}
-	EnqueueMessage(sms)
+	sms := &gosms.SMS{UUID: uuid.String(), Mobile: mobile, Body: message}
+	gosms.EnqueueMessage(sms)
 	w.Write([]byte("OK"))
 }
 
@@ -76,7 +77,7 @@ func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	startWith := vars["start"]
 	filter := "LIMIT 10 OFFSET " + startWith
-	messages, _ := getMessages(filter)
+	messages, _ := gosms.GetMessages(filter)
 	smsdata := SMSData{
 		Messages:             messages,
 		IDisplayStart:        startWith,
@@ -87,7 +88,7 @@ func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	var toWrite []byte
 	toWrite, err := json.Marshal(smsdata)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		toWrite = []byte("{\"messages\":[]}")
 	}
 	w.Header().Set("Content-type", "application/json")

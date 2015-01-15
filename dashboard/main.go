@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Omie/gosms/gosmslib"
+	"github.com/Omie/gosms"
 	"log"
 	"os"
 )
@@ -37,7 +37,7 @@ func main() {
 	gosms.InitWorker()
 
 	log.Println("Initializing server")
-	err = gosms.InitServer(serverhost, serverport)
+	err = InitServer(serverhost, serverport)
 	if err != nil {
 		log.Println("Error starting server: ", err.Error(), " Aborting")
 		os.Exit(1)

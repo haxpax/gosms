@@ -12,7 +12,16 @@ import (
 	"path/filepath"
 )
 
-type SMSData struct {
+//reposne structure to /sms
+type SMSResponse struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+}
+
+//response structure to /smsdata/
+type SMSDataResponse struct {
+	Status               int         `json:"status"`
+	Message              string      `json:"message"`
 	Messages             []gosms.SMS `json:"messages"`
 	IDisplayStart        string      `json:"iDisplayStart"`
 	IDisplayLength       int         `json:"iDisplayLength"`
@@ -62,13 +71,24 @@ func handleStatic(w http.ResponseWriter, r *http.Request) {
 //push sms, allowed methods: POST
 func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("--- smsAPIHandler")
+	w.Header().Set("Content-type", "application/json")
+
+	//TODO: validation
 	r.ParseForm()
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
 	uuid := uuid.NewV1()
 	sms := &gosms.SMS{UUID: uuid.String(), Mobile: mobile, Body: message}
 	gosms.EnqueueMessage(sms)
-	w.Write([]byte("OK"))
+
+	smsresp := SMSResponse{Status: 200, Message: "ok"}
+	var toWrite []byte
+	toWrite, err := json.Marshal(smsresp)
+	if err != nil {
+		log.Println(err)
+		//lets just depend on the server to raise 500
+	}
+	w.Write(toWrite)
 }
 
 //dumps data, used by log view. Methods allowed: GET
@@ -78,7 +98,9 @@ func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	startWith := vars["start"]
 	filter := "LIMIT 10 OFFSET " + startWith
 	messages, _ := gosms.GetMessages(filter)
-	smsdata := SMSData{
+	smsdata := SMSDataResponse{
+		Status:               200,
+		Message:              "ok",
 		Messages:             messages,
 		IDisplayStart:        startWith,
 		IDisplayLength:       10,
@@ -89,7 +111,7 @@ func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	toWrite, err := json.Marshal(smsdata)
 	if err != nil {
 		log.Println(err)
-		toWrite = []byte("{\"messages\":[]}")
+		//lets just depend on the server to raise 500
 	}
 	w.Header().Set("Content-type", "application/json")
 	w.Write(toWrite)

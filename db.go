@@ -2,17 +2,44 @@ package gosms
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
+	"os"
 )
 
 var db *sql.DB
 
 func InitDB(driver, dbname string) (*sql.DB, error) {
 	var err error
+	createDb := false
+	if _, err := os.Stat(dbname); os.IsNotExist(err) {
+		log.Printf("database does not exist %s", dbname)
+		createDb = true
+	}
 	db, err = sql.Open(driver, dbname)
-	return db, err
+	if createDb {
+		if err = syncDB(); err != nil {
+			return nil, errors.New("Error creating database")
+		}
+	}
+	return db, nil
+}
+
+func syncDB() error {
+	log.Println("--- syncDB")
+	//create messages table
+	createMessages := `CREATE TABLE messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                uuid char(32) UNIQUE NOT NULL,
+                message char(160)   NOT NULL,
+                mobile   char(15)    NOT NULL,
+                status  INTEGER DEFAULT 0,
+                retries INTEGER DEFAULT 0
+            );`
+	_, err := db.Exec(createMessages, nil)
+	return err
 }
 
 func insertMessage(sms *SMS) error {

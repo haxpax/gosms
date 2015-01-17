@@ -51,14 +51,7 @@ func processMessages() {
 	for {
 		message := <-messages
 		log.Println("processing: "+message.UUID, time.Now())
-		SendSMS(message.Mobile, message.Body)
-		/*
-		   TODO: modify this block to check result of SendSMS and change status
-		   code accordingly
-		*/
-		message.Status = SMSProcessed
+		message.Status = SendSMS(message.Mobile, message.Body)
 		updateMessageStatus(message)
-
-		time.Sleep(5 * time.Second)
 	}
 }

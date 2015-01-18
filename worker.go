@@ -11,11 +11,14 @@ const (
 	SMSError            // 2
 )
 
+const SMSRetryLimit = 3
+
 type SMS struct {
-	UUID   string `json:"uuid"`
-	Mobile string `json:"mobile"`
-	Body   string `json:"body"`
-	Status int    `json:"status"`
+	UUID    string `json:"uuid"`
+	Mobile  string `json:"mobile"`
+	Body    string `json:"body"`
+	Status  int    `json:"status"`
+	Retries int    `json:"retries"`
 }
 
 var messages chan SMS
@@ -52,6 +55,7 @@ func processMessages() {
 		message := <-messages
 		log.Println("processing: "+message.UUID, time.Now())
 		message.Status = SendSMS(message.Mobile, message.Body)
+		message.Retries++
 		updateMessageStatus(message)
 	}
 }

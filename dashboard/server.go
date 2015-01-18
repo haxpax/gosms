@@ -78,7 +78,7 @@ func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
 	uuid := uuid.NewV1()
-	sms := &gosms.SMS{UUID: uuid.String(), Mobile: mobile, Body: message}
+	sms := &gosms.SMS{UUID: uuid.String(), Mobile: mobile, Body: message, Retries: 0}
 	gosms.EnqueueMessage(sms)
 
 	smsresp := SMSResponse{Status: 200, Message: "ok"}

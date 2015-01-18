@@ -71,13 +71,13 @@ func updateMessageStatus(sms SMS) error {
 		log.Println(err)
 		return err
 	}
-	stmt, err := tx.Prepare("UPDATE messages SET status=? WHERE uuid=?")
+	stmt, err := tx.Prepare("UPDATE messages SET status=?, retries=? WHERE uuid=?")
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(sms.Status, sms.UUID)
+	_, err = stmt.Exec(sms.Status, sms.Retries, sms.UUID)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -88,7 +88,7 @@ func updateMessageStatus(sms SMS) error {
 
 func getPendingMessages() ([]SMS, error) {
 	log.Println("--- getPendingMessages ")
-	query := fmt.Sprintf("SELECT uuid, message, mobile, status FROM messages WHERE status=%v", SMSPending)
+	query := fmt.Sprintf("SELECT uuid, message, mobile, status, retries FROM messages WHERE status!=%v AND retries<%v", SMSProcessed, SMSRetryLimit)
 	log.Println(query)
 
 	rows, err := db.Query(query)
@@ -102,7 +102,7 @@ func getPendingMessages() ([]SMS, error) {
 
 	for rows.Next() {
 		sms := SMS{}
-		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status)
+		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status, &sms.Retries)
 		messages = append(messages, sms)
 	}
 	rows.Close()
@@ -115,7 +115,7 @@ func GetMessages(filter string) ([]SMS, error) {
 	   simply append it to the query to get desired set out of database
 	*/
 	log.Println("--- getPendingMessages ")
-	query := fmt.Sprintf("SELECT uuid, message, mobile, status FROM messages %v", filter)
+	query := fmt.Sprintf("SELECT uuid, message, mobile, status, retries FROM messages %v", filter)
 	log.Println(query)
 
 	rows, err := db.Query(query)
@@ -129,7 +129,7 @@ func GetMessages(filter string) ([]SMS, error) {
 
 	for rows.Next() {
 		sms := SMS{}
-		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status)
+		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status, &sms.Retries)
 		messages = append(messages, sms)
 	}
 	rows.Close()

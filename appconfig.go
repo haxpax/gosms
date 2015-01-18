@@ -44,12 +44,14 @@ func testConfig(appConfig ini.File) (bool, error) {
 	noOfDevices, _ := strconv.Atoi(tno)
 	requiredFields = []setting{}
 
-	for i := 0; i <= noOfDevices; i++ {
+	for i := 0; i < noOfDevices; i++ {
 		d := fmt.Sprintf("DEVICE%v", i)
 		sCom := setting{d, "COMPORT"}
 		sBaud := setting{d, "BAUDRATE"}
+		sDevid := setting{d, "DEVID"}
 		requiredFields = append(requiredFields, sCom)
 		requiredFields = append(requiredFields, sBaud)
+		requiredFields = append(requiredFields, sDevid)
 	}
 
 	for _, c := range requiredFields {

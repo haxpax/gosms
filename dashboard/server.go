@@ -52,7 +52,8 @@ func testSMSHandlerPost(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	mobile := r.FormValue("mobile")
 	message := r.FormValue("message")
-	gosms.SendSMS(mobile, message)
+	msg := &gosms.SMS{Mobile: mobile, Body: message, Retries: 0}
+	gosms.EnqueueMessage(msg, true)
 	w.Write([]byte("OK"))
 }
 
@@ -79,7 +80,7 @@ func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	message := r.FormValue("message")
 	uuid := uuid.NewV1()
 	sms := &gosms.SMS{UUID: uuid.String(), Mobile: mobile, Body: message, Retries: 0}
-	gosms.EnqueueMessage(sms)
+	gosms.EnqueueMessage(sms, true)
 
 	smsresp := SMSResponse{Status: 200, Message: "ok"}
 	var toWrite []byte

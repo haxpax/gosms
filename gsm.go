@@ -6,37 +6,40 @@ import (
 	"log"
 	"runtime"
 	"strings"
+	"time"
 )
 
+//TODO: should be configurable
+const SMSRetryLimit = 3
+
 type GSMModem struct {
-	port   string
-	baud   int
-	status bool
-	conn   io.ReadWriteCloser
+	Port   string
+	Baud   int
+	Status bool
+	Conn   io.ReadWriteCloser
+	Devid  string
 }
 
-var modem *GSMModem
-
 func (m *GSMModem) Connect() error {
-	log.Println("--- Connect")
+	//log.Println("--- Connect")
 	// Setting ReadTimeout to 1secs
 	var readTimeout uint32 = 10
 	if runtime.GOOS == "windows" {
 		readTimeout = 1000
 	}
-	c := &serial.Config{Name: m.port, Baud: m.baud, NonBlockingRead: true, ReadTimeout: readTimeout}
+	c := &serial.Config{Name: m.Port, Baud: m.Baud, NonBlockingRead: true, ReadTimeout: readTimeout}
 	s, err := serial.OpenPort(c)
 	if err == nil {
-		m.status = true
-		m.conn = s
+		m.Status = true
+		m.Conn = s
 	}
 	return err
 }
 
 func (m *GSMModem) SendCommand(command string, waitForOk bool) string {
-	log.Println("--- SendCommand: ", command)
+	//log.Println("--- SendCommand: ", command)
 	var status string = ""
-	_, err := m.conn.Write([]byte(command))
+	_, err := m.Conn.Write([]byte(command))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,31 +50,25 @@ func (m *GSMModem) SendCommand(command string, waitForOk bool) string {
 	}
 	for i := 0; i < loop; i++ {
 		// ignoring error as EOF raises error on Linux
-		n, _ := m.conn.Read(buf)
+		n, _ := m.Conn.Read(buf)
 		if n > 0 {
 			status = string(buf[:n])
-			log.Printf("rcvd %d bytes: %s\n", n, status)
+			//log.Printf("SendCommand: rcvd %d bytes: %s\n", n, status)
 		}
 	}
 	return status
 }
 
-func InitModem(comport string) error {
-	log.Println("--- InitModem ", comport)
-	modem = &GSMModem{port: comport, baud: 115200}
-	return modem.Connect()
-}
-
-func SendSMS(mobile string, message string) int {
-	log.Println("--- SendSMS ", mobile, message)
+func (m *GSMModem) SendSMS(mobile string, message string) int {
+	//log.Println("--- SendSMS ", mobile, message)
 
 	// Put Modem in SMS Text Mode
-	modem.SendCommand("AT+CMGF=1\r", false)
+	m.SendCommand("AT+CMGF=1\r", false)
 
-	modem.SendCommand("AT+CMGS=\""+mobile+"\"\r", false)
+	m.SendCommand("AT+CMGS=\""+mobile+"\"\r", false)
 
 	// EOM CTRL-Z = 26
-	status := modem.SendCommand(message+string(26), true)
+	status := m.SendCommand(message+string(26), true)
 	if strings.HasSuffix(status, "OK\r\n") {
 		return SMSProcessed
 	} else if strings.HasSuffix(status, "ERROR\r\n") {
@@ -80,4 +77,30 @@ func SendSMS(mobile string, message string) int {
 		return SMSPending
 	}
 
+}
+
+func (m *GSMModem) ProcessMessages() {
+	defer func() {
+		log.Println("--- deferring ProcessMessage")
+		m.Status = false
+	}()
+
+	//log.Println("--- ProcessMessage")
+	for {
+		message := <-messages
+		log.Println("processing: ", message.UUID, m.Devid)
+
+		message.Status = m.SendSMS(message.Mobile, message.Body)
+		message.Device = m.Devid
+		message.Retries++
+		updateMessageStatus(message)
+		if message.Status != SMSProcessed && message.Retries < SMSRetryLimit {
+			// push message back to queue until either it is sent successfully or
+			// retry count is reached
+			// I can't push it to channel directly. Doing so may cause the sms to be in
+			// the queue twice. I don't want that
+			EnqueueMessage(&message, false)
+		}
+		time.Sleep(5 * time.Microsecond)
+	}
 }

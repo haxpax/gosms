@@ -15,7 +15,7 @@ func InitDB(driver, dbname string) (*sql.DB, error) {
 	var err error
 	createDb := false
 	if _, err := os.Stat(dbname); os.IsNotExist(err) {
-		log.Printf("database does not exist %s", dbname)
+		log.Printf("InitDB: database does not exist %s", dbname)
 		createDb = true
 	}
 	db, err = sql.Open(driver, dbname)
@@ -36,7 +36,8 @@ func syncDB() error {
                 message char(160)   NOT NULL,
                 mobile   char(15)    NOT NULL,
                 status  INTEGER DEFAULT 0,
-                retries INTEGER DEFAULT 0
+                retries INTEGER DEFAULT 0,
+                device string NULL
             );`
 	_, err := db.Exec(createMessages, nil)
 	return err
@@ -46,18 +47,18 @@ func insertMessage(sms *SMS) error {
 	log.Println("--- insertMessage ", sms)
 	tx, err := db.Begin()
 	if err != nil {
-		log.Println(err)
+		log.Println("insertMessage: ", err)
 		return err
 	}
 	stmt, err := tx.Prepare("INSERT INTO messages(uuid, message, mobile) VALUES(?, ?, ?)")
 	if err != nil {
-		log.Println(err)
+		log.Println("insertMessage: ", err)
 		return err
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(sms.UUID, sms.Body, sms.Mobile)
 	if err != nil {
-		log.Println(err)
+		log.Println("insertMessage: ", err)
 		return err
 	}
 	tx.Commit()
@@ -68,32 +69,33 @@ func updateMessageStatus(sms SMS) error {
 	log.Println("--- updateMessageStatus ", sms)
 	tx, err := db.Begin()
 	if err != nil {
-		log.Println(err)
+		log.Println("updateMessageStatus: ", err)
 		return err
 	}
-	stmt, err := tx.Prepare("UPDATE messages SET status=?, retries=? WHERE uuid=?")
+	stmt, err := tx.Prepare("UPDATE messages SET status=?, retries=?, device=? WHERE uuid=?")
 	if err != nil {
-		log.Println(err)
+		log.Println("updateMessageStatus: ", err)
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(sms.Status, sms.Retries, sms.UUID)
+	_, err = stmt.Exec(sms.Status, sms.Retries, sms.Device, sms.UUID)
 	if err != nil {
-		log.Println(err)
+		log.Println("updateMessageStatus: ", err)
 		return err
 	}
 	tx.Commit()
 	return nil
 }
 
-func getPendingMessages() ([]SMS, error) {
+func getPendingMessages(bufferSize int) ([]SMS, error) {
 	log.Println("--- getPendingMessages ")
-	query := fmt.Sprintf("SELECT uuid, message, mobile, status, retries FROM messages WHERE status!=%v AND retries<%v", SMSProcessed, SMSRetryLimit)
-	log.Println(query)
+	query := fmt.Sprintf("SELECT uuid, message, mobile, status, retries FROM messages WHERE status!=%v AND retries<%v LIMIT %v",
+		SMSProcessed, SMSRetryLimit, bufferSize)
+	log.Println("getPendingMessages: ", query)
 
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Println(err)
+		log.Println("getPendingMessages: ", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -114,13 +116,13 @@ func GetMessages(filter string) ([]SMS, error) {
 	   expecting filter as empty string or WHERE clauses,
 	   simply append it to the query to get desired set out of database
 	*/
-	log.Println("--- getPendingMessages ")
-	query := fmt.Sprintf("SELECT uuid, message, mobile, status, retries FROM messages %v", filter)
-	log.Println(query)
+	log.Println("--- GetMessages")
+	query := fmt.Sprintf("SELECT uuid, message, mobile, status, retries, device FROM messages %v", filter)
+	log.Println("GetMessages: ", query)
 
 	rows, err := db.Query(query)
 	if err != nil {
-		log.Println(err)
+		log.Println("GetMessages: ", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -129,7 +131,7 @@ func GetMessages(filter string) ([]SMS, error) {
 
 	for rows.Next() {
 		sms := SMS{}
-		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status, &sms.Retries)
+		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status, &sms.Retries, &sms.Device)
 		messages = append(messages, sms)
 	}
 	rows.Close()

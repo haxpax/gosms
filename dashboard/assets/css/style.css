@@ -1,0 +1,22 @@
+.main {
+	padding: 20px;
+}
+
+.sidebar {
+	padding: 20px;
+	border-left: 1px solid #EBEBEB;
+}
+
+#barChart {
+	float: left;
+	width: 50%;
+	padding: 20px;
+	height: 240px;
+}
+
+#pieChart {
+	float: left;
+	width: 50%;
+	padding: 20px;
+	height: 240px;
+}

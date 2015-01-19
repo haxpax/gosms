@@ -20,58 +20,41 @@ type SMSResponse struct {
 
 //response structure to /smsdata/
 type SMSDataResponse struct {
-	Status               int         `json:"status"`
-	Message              string      `json:"message"`
-	Messages             []gosms.SMS `json:"messages"`
-	IDisplayStart        string      `json:"iDisplayStart"`
-	IDisplayLength       int         `json:"iDisplayLength"`
-	ITotalRecords        int         `json:"iTotalRecords"`
-	ITotalDisplayRecords int         `json:"iTotalDisplayRecords"`
+	Status   int         `json:"status"`
+	Message  string      `json:"message"`
+	Messages []gosms.SMS `json:"messages"`
 }
 
 // Cache templates
-var templates = template.Must(template.ParseFiles("./templates/index.html", "./templates/smsdata.html"))
+var templates = template.Must(template.ParseFiles("./templates/index.html"))
 
-/* web views */
+/* dashboard handlers */
 
-//sms log viewer
+// dashboard
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("--- indexHandler")
-	templates.ExecuteTemplate(w, "smsdata.html", nil)
+	// templates.ExecuteTemplate(w, "index.html", nil)
+	// Use during development to avoid having to restart server
+	// after every change in HTML
+	t, _ := template.ParseFiles("./templates/index.html")
+	t.Execute(w, nil)
 }
 
-//test sending sms
-func testSMSHandlerGet(w http.ResponseWriter, r *http.Request) {
-	log.Println("--- testSMSHandlerGet")
-	templates.ExecuteTemplate(w, "index.html", nil)
-}
-
-//handle test sms POST request
-func testSMSHandlerPost(w http.ResponseWriter, r *http.Request) {
-	log.Println("--- testSMSHandlerPost")
-	r.ParseForm()
-	mobile := r.FormValue("mobile")
-	message := r.FormValue("message")
-	msg := &gosms.SMS{Mobile: mobile, Body: message, Retries: 0}
-	gosms.EnqueueMessage(msg, true)
-	w.Write([]byte("OK"))
-}
-
-//handle all static files based on specified path
-//for now its /assets
+// handle all static files based on specified path
+// for now its /assets
 func handleStatic(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	static := vars["path"]
 	http.ServeFile(w, r, filepath.Join("./assets", static))
 }
 
-/* end web views */
+/* end dashboard handlers */
 
-/* API views */
+/* API handlers */
 
-//push sms, allowed methods: POST
-func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("--- smsAPIHandler")
+// push sms, allowed methods: POST
+func sendSMSHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("--- sendSMSHandler")
 	w.Header().Set("Content-type", "application/json")
 
 	//TODO: validation
@@ -92,24 +75,17 @@ func smsAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(toWrite)
 }
 
-//dumps data, used by log view. Methods allowed: GET
-func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("--- smsDataAPIHandler")
-	vars := mux.Vars(r)
-	startWith := vars["start"]
-	filter := "LIMIT 10 OFFSET " + startWith
-	messages, _ := gosms.GetMessages(filter)
-	smsdata := SMSDataResponse{
-		Status:               200,
-		Message:              "ok",
-		Messages:             messages,
-		IDisplayStart:        startWith,
-		IDisplayLength:       10,
-		ITotalRecords:        len(messages),
-		ITotalDisplayRecords: len(messages),
+// dumps JSON data, used by log view. Methods allowed: GET
+func getLogsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("--- getLogsHandler")
+	messages, _ := gosms.GetMessages("")
+	logs := SMSDataResponse{
+		Status:   200,
+		Message:  "ok",
+		Messages: messages,
 	}
 	var toWrite []byte
-	toWrite, err := json.Marshal(smsdata)
+	toWrite, err := json.Marshal(logs)
 	if err != nil {
 		log.Println(err)
 		//lets just depend on the server to raise 500
@@ -118,7 +94,7 @@ func smsDataAPIHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(toWrite)
 }
 
-/* end API views */
+/* end API handlers */
 
 func InitServer(host string, port string) error {
 	log.Println("--- InitServer ", host, port)
@@ -128,17 +104,13 @@ func InitServer(host string, port string) error {
 
 	r.HandleFunc("/", indexHandler)
 
-	//handle static files
+	// handle static files
 	r.HandleFunc(`/assets/{path:[a-zA-Z0-9=\-\/\.\_]+}`, handleStatic)
 
-	//get rid of this view once done testing
-	testsms := r.Path("/testsms/").Subrouter()
-	testsms.Methods("GET").HandlerFunc(testSMSHandlerGet)
-	testsms.Methods("POST").HandlerFunc(testSMSHandlerPost)
-
-	//all API views
-	r.HandleFunc("/api/sms/", smsAPIHandler)
-	r.HandleFunc(`/api/smsdata/{start:[0-9]+}`, smsDataAPIHandler)
+	// all API handlers
+	api := r.PathPrefix("/api").Subrouter()
+	api.Methods("GET").Path("/logs/").HandlerFunc(getLogsHandler)
+	api.Methods("POST").Path("/sms/").HandlerFunc(sendSMSHandler)
 
 	http.Handle("/", r)
 

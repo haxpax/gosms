@@ -4,7 +4,6 @@ import (
 	"github.com/haxpax/goserial"
 	"io"
 	"log"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -22,12 +21,7 @@ type GSMModem struct {
 
 func (m *GSMModem) Connect() error {
 	//log.Println("--- Connect")
-	// Setting ReadTimeout to 1secs
-	var readTimeout uint32 = 10
-	if runtime.GOOS == "windows" {
-		readTimeout = 1000
-	}
-	c := &serial.Config{Name: m.Port, Baud: m.Baud, NonBlockingRead: true, ReadTimeout: readTimeout}
+	c := &serial.Config{Name: m.Port, Baud: m.Baud, ReadTimeout: 1000}
 	s, err := serial.OpenPort(c)
 	if err == nil {
 		m.Status = true

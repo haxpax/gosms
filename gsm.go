@@ -2,7 +2,6 @@ package gosms
 
 import (
 	"github.com/haxpax/goserial"
-	"io"
 	"log"
 	"strings"
 	"time"
@@ -15,13 +14,13 @@ type GSMModem struct {
 	Port   string
 	Baud   int
 	Status bool
-	Conn   io.ReadWriteCloser
+	Conn   serial.ReadWriteFlushCloser
 	Devid  string
 }
 
 func (m *GSMModem) Connect() error {
 	//log.Println("--- Connect")
-	c := &serial.Config{Name: m.Port, Baud: m.Baud, ReadTimeout: 1000}
+	c := &serial.Config{Name: m.Port, Baud: m.Baud, ReadTimeout: time.Second}
 	s, err := serial.OpenPort(c)
 	if err == nil {
 		m.Status = true
@@ -31,8 +30,9 @@ func (m *GSMModem) Connect() error {
 }
 
 func (m *GSMModem) SendCommand(command string, waitForOk bool) string {
-	//log.Println("--- SendCommand: ", command)
+	log.Println("--- SendCommand: ", command)
 	var status string = ""
+	m.Conn.Flush()
 	_, err := m.Conn.Write([]byte(command))
 	if err != nil {
 		log.Fatal(err)
@@ -47,14 +47,17 @@ func (m *GSMModem) SendCommand(command string, waitForOk bool) string {
 		n, _ := m.Conn.Read(buf)
 		if n > 0 {
 			status = string(buf[:n])
-			//log.Printf("SendCommand: rcvd %d bytes: %s\n", n, status)
+			log.Printf("--- SendCommand: rcvd %d bytes: %s\n", n, status)
+			if strings.HasSuffix(status, "OK\r\n") || strings.HasSuffix(status, "ERROR\r\n") {
+				break
+			}
 		}
 	}
 	return status
 }
 
 func (m *GSMModem) SendSMS(mobile string, message string) int {
-	//log.Println("--- SendSMS ", mobile, message)
+	log.Println("--- SendSMS ", mobile, message)
 
 	// Put Modem in SMS Text Mode
 	m.SendCommand("AT+CMGF=1\r", false)
@@ -63,6 +66,7 @@ func (m *GSMModem) SendSMS(mobile string, message string) int {
 
 	// EOM CTRL-Z = 26
 	status := m.SendCommand(message+string(26), true)
+
 	if strings.HasSuffix(status, "OK\r\n") {
 		return SMSProcessed
 	} else if strings.HasSuffix(status, "ERROR\r\n") {

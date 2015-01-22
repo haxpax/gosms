@@ -37,7 +37,9 @@ func syncDB() error {
                 mobile   char(15)    NOT NULL,
                 status  INTEGER DEFAULT 0,
                 retries INTEGER DEFAULT 0,
-                device string NULL
+                device string NULL,
+                created_at TIMESTAMP default CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP
             );`
 	_, err := db.Exec(createMessages, nil)
 	return err
@@ -72,7 +74,7 @@ func updateMessageStatus(sms SMS) error {
 		log.Println("updateMessageStatus: ", err)
 		return err
 	}
-	stmt, err := tx.Prepare("UPDATE messages SET status=?, retries=?, device=? WHERE uuid=?")
+	stmt, err := tx.Prepare("UPDATE messages SET status=?, retries=?, device=?, updated_at=DATETIME('now') WHERE uuid=?")
 	if err != nil {
 		log.Println("updateMessageStatus: ", err)
 		return err

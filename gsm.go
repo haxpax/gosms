@@ -47,7 +47,7 @@ func (m *GSMModem) SendCommand(command string, waitForOk bool) string {
 		n, _ := m.Conn.Read(buf)
 		if n > 0 {
 			status = string(buf[:n])
-			log.Printf("--- SendCommand: rcvd %d bytes: %s\n", n, status)
+			log.Printf("SendCommand: rcvd %d bytes: %s\n", n, status)
 			if strings.HasSuffix(status, "OK\r\n") || strings.HasSuffix(status, "ERROR\r\n") {
 				break
 			}

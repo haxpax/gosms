@@ -23,6 +23,9 @@ $(function() {
       url: "/api/logs/"
     })
     .done(function(logs) {
+      if(!logs.messages) {
+        return
+      }
       logTable.fnClearTable(logs.messages);
       logTable.fnAddData(logs.messages);
     })

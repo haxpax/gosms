@@ -1,75 +1,82 @@
 $(function() {
-  var SMSStatus = ["Processed", "Pending", "Error"]
-  $.ajax({
-    url: "/api/logs/"       
-  })
-  .done(function(logs) {
-    // SMS Log Table    
-    var logTable = $('#smsdata').dataTable({
-      "data": logs.messages,
-      "bLengthChange": false,
-      "oLanguage": { "sSearch": "" },
-      "columns": [
-          { "data": "mobile" },
-          { "data": "body" },
-          { "data": "status",
-            "mRender": function( data, type, full ) {
-              if(data == 0)
-                return "Pending";
-              else if(data == 1)
-                return "Processed";
-              return "Error";
-            },
-            bUseRendered: false
-          }
-      ]
-    });
-  })  
-  .done(function(logs) {
-    // Bar Chart
-    var data = []
-    var daycount = logs.daycount    
-    for(day in daycount) {
-      data.push([ day, daycount[day] ])
-    }    
-    var plot = $.plot("#barChart", [ data ], {
-      series: {
-        bars: {
-          show: true,
-          barWidth: 0.4,
-          align: "center"
-        }
-      },
-      xaxis: {
-        mode: "categories",
-        tickLength: 0
-      }
-    });
-  })
-  .done(function(logs) {
-    // Pie Chart
-    var status = []
-    var summary = logs.summary;    
-    for(var i = 0;i < summary.length;i++) {
-      status.push({ label: SMSStatus[i], data: summary[i] })
-    }    
-    $.plot("#pieChart", status, {
-      series: {
-        pie: {
-          radius: 1,
-          innerRadius: 0.5,
-          show: true
-        },
-      },
-      legend: {
-        show: true,
-      }
-    });        
-  })
+  var SMSStatus = ["Pending", "Processed", "Error"]
 
+  // SMS Log Table
+  var logTable = $('#smsdata').dataTable({
+    "data": [],
+    "bLengthChange": false,
+    "oLanguage": { "sSearch": "" },
+    "columns": [
+        { "data": "mobile" },
+        { "data": "body" },
+        { "data": "status",
+          "mRender": function( data, type, full ) {
+            return SMSStatus[data];
+          },
+          bUseRendered: false
+        }
+    ]
+  });
+  
+  var loadData = function() {
+    $.ajax({
+      url: "/api/logs/"
+    })
+    .done(function(logs) {
+      logTable.fnClearTable(logs.messages);
+      logTable.fnAddData(logs.messages);
+    })
+    .done(function(logs) {
+      // Bar Chart
+      var data = []
+      var daycount = logs.daycount
+      for(day in daycount) {
+        data.push([ day, daycount[day] ])
+      }
+      var plot = $.plot("#barChart", [ data ], {
+        series: {
+          bars: {
+            show: true,
+            barWidth: 0.4,
+            align: "center"
+          }
+        },
+        xaxis: {
+          mode: "categories",
+          tickLength: 0
+        }
+      });
+    })
+    .done(function(logs) {
+      // Pie Chart
+      var status = []
+      var summary = logs.summary;
+      for(var i = 0;i < summary.length;i++) {
+        status.push({ label: SMSStatus[i], data: summary[i] })
+      }
+      $.plot("#pieChart", status, {
+        series: {
+          pie: {
+            radius: 1,
+            innerRadius: 0.5,
+            show: true,
+            label: {
+              radius: 3/4,
+              show: true,
+              formatter: labelFormatter
+            }
+          },
+        },
+        legend: {
+          show: true,
+        }
+      });
+    })
+  }
+
+  // Function to format pie chart labels
   function labelFormatter(label, series) {
-    return "<div style='font-size:8pt; text-align:center; padding:2px; color:white;'>" + label + "<br/>"
-    + Math.round(series.percent) + "%</div>";
+    return "<div style='font-size:8pt; text-align:center; padding:2px; color: #333;'>" + Math.round(series.data[0][1]) + "</div>";
   }
 
   // Send Test SMS
@@ -78,9 +85,11 @@ $(function() {
     var formData = $(this).serialize();
     $.post(url, formData, function(resp) {
       // reload logs table					
-      logTable.api().ajax.reload();
+      loadData();
     });
     return false;
   });
-			
+  
+  loadData();
+
 });

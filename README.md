@@ -9,12 +9,12 @@ Your own local SMS gateway
 - provides API over HTTP to push messages to gateway, just like the internet based gateways do
 - takes care of queuing, throttling and retrying
 
-![gosms dashboard](https://github.com/haxpax/gosms/blob/screenshot/screenshots/gosms.png)
+![gosms dashboard](https://raw.githubusercontent.com/haxpax/gosms/screenshot/screenshots/gosms.png)
 
 deployment
 ----------
-- Update `conf.ini` [DEVICES] section with your modem's COM port
-  (for ex. `COM10` or `/dev/USBtty2`)
+- Update conf.ini `[DEVICES]` section with your modem's COM port.
+  for ex. `COM10` or `/dev/USBtty2`
 - Run
 
 API specification
@@ -59,11 +59,11 @@ API specification
 
 planned features
 -------
+- Allowing multiple mobile numbers with a single message in `/api/sms/`
 - CRUD support for messages, possibly support cancellation of message
-- authentication support for API
-- authentication support for WebUI
-- support multiple devices with load balancing
-
+- Authentication support for API
+- Adding authentication for Dashboard
+- Send an email to admin on high failure rate
 
 building on windows
 -------------------

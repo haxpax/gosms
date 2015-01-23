@@ -13,7 +13,8 @@ Your own local SMS gateway
 
 deployment
 ----------
-- Update `conf.ini` [DEVICES] section with your modem's COM port (for ex. COM10 or /dev/USBtty2)
+- Update `conf.ini` [DEVICES] section with your modem's COM port
+  (for ex. `COM10` or `/dev/USBtty2`)
 - Run
 
 API specification

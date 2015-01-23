@@ -143,8 +143,9 @@ func GetMessages(filter string) ([]SMS, error) {
 func GetLast7DaysMessageCount() (map[string]int, error) {
 	log.Println("--- GetLast7DaysMessageCount")
 
-	rows, err := db.Query(`SELECT strftime('%Y-%m-%d', created_at) as datestamp, 
-    COUNT(id) as messagecount FROM messages GROUP BY datestamp LIMIT 7`)
+	rows, err := db.Query(`SELECT strftime('%Y-%m-%d', created_at) as datestamp,
+    COUNT(id) as messagecount FROM messages GROUP BY datestamp
+    ORDER BY datestamp DESC LIMIT 7`)
 	if err != nil {
 		log.Println("GetLast7DaysMessageCount: ", err)
 		return nil, err

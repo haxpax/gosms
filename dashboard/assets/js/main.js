@@ -4,6 +4,7 @@ $(function() {
   // SMS Log Table
   var logTable = $('#smsdata').dataTable({
     "data": [],
+    "iDisplayLength": 5,
     "bLengthChange": false,
     "oLanguage": { "sSearch": "" },
     "columns": [
@@ -33,8 +34,9 @@ $(function() {
       // Bar Chart
       var data = []
       var daycount = logs.daycount
-      for(day in daycount) {
-        data.push([ day, daycount[day] ])
+      for(dt in daycount) {
+        var day = moment(dt, "YYYY-MM-DD").format("ddd");
+        data.push([ day, daycount[dt] ])
       }
       var plot = $.plot("#barChart", [ data ], {
         series: {

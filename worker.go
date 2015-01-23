@@ -51,9 +51,12 @@ func InitWorker(modems []*GSMModem, bufferSize, bufferLow, loaderTimeout, countO
 
 	for i := 0; i < len(modems); i++ {
 		modem := modems[i]
-		if err := modem.Connect(); err == nil {
-			go modem.ProcessMessages()
+		err := modem.Connect()
+        if err != nil {
+            log.Println("InitWorker: error connecting", modem.Devid, err)
+            continue
 		}
+        go modem.ProcessMessages()
 	}
 	go messageLoader(bufferMaxSize, bufferLowCount)
 }

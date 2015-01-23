@@ -20,9 +20,11 @@ type SMSResponse struct {
 
 //response structure to /smsdata/
 type SMSDataResponse struct {
-	Status   int         `json:"status"`
-	Message  string      `json:"message"`
-	Messages []gosms.SMS `json:"messages"`
+	Status   int            `json:"status"`
+	Message  string         `json:"message"`
+	Summary  []int          `json:"summary"`
+	DayCount map[string]int `json:"daycount"`
+	Messages []gosms.SMS    `json:"messages"`
 }
 
 // Cache templates
@@ -79,9 +81,13 @@ func sendSMSHandler(w http.ResponseWriter, r *http.Request) {
 func getLogsHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("--- getLogsHandler")
 	messages, _ := gosms.GetMessages("")
+	summary, _ := gosms.GetStatusSummary()
+	dayCount, _ := gosms.GetLast7DaysMessageCount()
 	logs := SMSDataResponse{
 		Status:   200,
 		Message:  "ok",
+		Summary:  summary,
+		DayCount: dayCount,
 		Messages: messages,
 	}
 	var toWrite []byte

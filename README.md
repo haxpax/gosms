@@ -9,6 +9,8 @@ Your own local SMS gateway
 - provides API over HTTP to push messages to gatewy, just like the internet based gateways do
 - takes care of queing, throttling, retrying etc
 
+![gosms dashboard](https://github.com/haxpax/gosms/blob/screenshot/screenshots/gosms.png)
+
 deployment
 ----------
 - download suitable binary from downloads section
@@ -18,41 +20,46 @@ deployment
 
 API specification
 ------------------
-- /api/sms
-    - POST
+- /api/sms/ [*POST*]
     - param **mobile**
         - mobile number to send message to
-        - Number should have contrycode prefix
-        - for example: +919890098900
+        - number should have contry code prefix
+        - for ex. +919890098900
     - param **message**
         - message text
         - max length is limited to 160 characters
     - response
-        - status 200, "ok" on success
-
-- /api/smsdata/<start>
-    - GET
-    - **start** should be an integer specifying starting offset
+      - 
+        ```json
+        {
+          "status": 200,
+          "message": "ok"
+        }
+        ```
+- /api/logs/ [*GET*]
     - response
-        - ```json
-            {   "messages": [   
-                        {   "uuid": string,
-                            "mobile": string,
-                            "body": string,
-                            "status": int
-                        },
-                    ]
-                "iDisplayStart": int,
-                "iDisplayLength": int,
-                "iTotalRecords": int,
-                "iTotalDisplayRecords": int
-            }
+        - 
+          ```json
+          {
+            "status": 200,
+            "message": "ok",
+            "summary": [ <total_pending>int, <total_processed>int, <total_error>int ],
+            "daycount": { <date>string: <count>int, },
+            "messages": [
+              {
+                "uuid": string,
+                "mobile": string,
+                "body": string,
+                "status": int
+              },
+            ]
+          }
           ```
-        - message status codes
-            - 0 : Pending
-            - 1 : Processed
-            - 2 : Error
-            
+    - message status codes
+      - 0 : Pending
+      - 1 : Processed
+      - 2 : Error
+
 planned features
 -------
 - CRUD support for messages, possibly support cancellation of message

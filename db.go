@@ -139,3 +139,46 @@ func GetMessages(filter string) ([]SMS, error) {
 	rows.Close()
 	return messages, nil
 }
+
+func GetLast7DaysMessageCount() (map[string]int, error) {
+	log.Println("--- GetLast7DaysMessageCount")
+
+	rows, err := db.Query(`SELECT strftime('%Y-%m-%d', created_at) as datestamp, 
+    COUNT(id) as messagecount FROM messages GROUP BY datestamp LIMIT 7`)
+	if err != nil {
+		log.Println("GetLast7DaysMessageCount: ", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	dayCount := make(map[string]int)
+	var day string
+	var count int
+	for rows.Next() {
+		rows.Scan(&day, &count)
+		dayCount[day] = count
+	}
+	rows.Close()
+	return dayCount, nil
+}
+
+func GetStatusSummary() ([]int, error) {
+	log.Println("--- GetStatusSummary")
+
+	rows, err := db.Query(`SELECT status, COUNT(id) as messagecount 
+    FROM messages GROUP BY status ORDER BY status`)
+	if err != nil {
+		log.Println("GetStatusSummary: ", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var status, count int
+	statusSummary := make([]int, 3)
+	for rows.Next() {
+		rows.Scan(&status, &count)
+		statusSummary[status] = count
+	}
+	rows.Close()
+	return statusSummary, nil
+}

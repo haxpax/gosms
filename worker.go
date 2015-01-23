@@ -23,26 +23,28 @@ type SMS struct {
 var messages chan SMS
 var wakeupMessageLoader chan bool
 
+var bufferMaxSize int
+var bufferLowCount int
 var messageCountSinceLastWakeup int
 var timeOfLastWakeup time.Time
+var messageLoaderTimeout time.Duration
+var messageLoaderCountout int
+var messageLoaderLongTimeout time.Duration
 
-func InitWorker(modems []*GSMModem) {
+func InitWorker(modems []*GSMModem, bufferSize, bufferLow, loaderTimeout, countOut, loaderLongTimeout int) {
 	log.Println("--- InitWorker")
 
-	numModems := len(modems)
-	//TODO: check number of modems > 0
+	bufferMaxSize = bufferSize
+	bufferLowCount = bufferLow
+	messageLoaderTimeout = time.Duration(loaderTimeout) * time.Minute
+	messageLoaderCountout = countOut
+	messageLoaderLongTimeout = time.Duration(loaderLongTimeout) * time.Minute
 
-	//need to work on bufferSize and related numbers.
-	//if not all modems get connected, these numbers are not quite right
-	//still, good to start with
-	//may be just let user decide these numbers
-	bufferSize := numModems * 5
-
-	messages = make(chan SMS, bufferSize)
+	messages = make(chan SMS, bufferMaxSize)
 	wakeupMessageLoader = make(chan bool, 1)
 	wakeupMessageLoader <- true
 	messageCountSinceLastWakeup = 0
-	timeOfLastWakeup = time.Now().Add(-1 * time.Minute) //older time handles the cold start state of the system
+	timeOfLastWakeup = time.Now().Add((time.Duration(loaderTimeout) * -1) * time.Minute) //older time handles the cold start state of the system
 
 	// its important to init messages channel before starting modems because nil
 	// channel is non-blocking
@@ -53,7 +55,7 @@ func InitWorker(modems []*GSMModem) {
 			go modem.ProcessMessages()
 		}
 	}
-	go messageLoader(bufferSize, bufferSize/2)
+	go messageLoader(bufferMaxSize, bufferLowCount)
 }
 
 func EnqueueMessage(message *SMS, insertToDB bool) {
@@ -66,7 +68,7 @@ func EnqueueMessage(message *SMS, insertToDB bool) {
 		//notify the message loader only if its been to too long
 		//or too many messages since last notification
 		messageCountSinceLastWakeup++
-		if messageCountSinceLastWakeup > 10 || time.Now().Sub(timeOfLastWakeup) > time.Duration(1*time.Minute) {
+		if messageCountSinceLastWakeup > messageLoaderCountout || time.Now().Sub(timeOfLastWakeup) > messageLoaderTimeout {
 			log.Println("EnqueueMessage: ", "waking up message loader")
 			wakeupMessageLoader <- true
 			messageCountSinceLastWakeup = 0
@@ -89,7 +91,7 @@ func messageLoader(bufferSize, minFill int) {
 		*/
 		timeout := make(chan bool, 1)
 		go func() {
-			time.Sleep(10 * time.Minute)
+			time.Sleep(messageLoaderLongTimeout)
 			timeout <- true
 		}()
 		log.Println("messageLoader: ", "waiting for wakeup call")
@@ -99,14 +101,14 @@ func messageLoader(bufferSize, minFill int) {
 		case <-timeout:
 			log.Println("messageLoader: woken up by timeout")
 		}
-		if len(messages) >= minFill {
+		if len(messages) >= bufferLowCount {
 			//if we have sufficient number of messages to process,
 			//don't bother hitting the database
 			log.Println("messageLoader: ", "I have sufficient messages")
 			continue
 		}
 
-		countToFetch := bufferSize - len(messages)
+		countToFetch := bufferMaxSize - len(messages)
 		log.Println("messageLoader: ", "I need to fetch more messages", countToFetch)
 		pendingMsgs, err := getPendingMessages(countToFetch)
 		if err == nil {

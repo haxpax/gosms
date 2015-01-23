@@ -30,6 +30,11 @@ func testConfig(appConfig ini.File) (bool, error) {
 		{"SETTINGS", "SERVERPORT"},
 		{"SETTINGS", "RETRIES"},
 		{"SETTINGS", "DEVICES"},
+		{"SETTINGS", "BUFFERSIZE"},
+		{"SETTINGS", "BUFFERLOW"},
+		{"SETTINGS", "MSGTIMEOUT"},
+		{"SETTINGS", "MSGCOUNTOUT"},
+		{"SETTINGS", "MSGTIMEOUTLONG"},
 	}
 
 	for _, c := range requiredFields {

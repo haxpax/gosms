@@ -42,8 +42,23 @@ func main() {
 		modems = append(modems, m)
 	}
 
+	_bufferSize, _ := appConfig.Get("SETTINGS", "BUFFERSIZE")
+	bufferSize, _ := strconv.Atoi(_bufferSize)
+
+	_bufferLow, _ := appConfig.Get("SETTINGS", "BUFFERLOW")
+	bufferLow, _ := strconv.Atoi(_bufferLow)
+
+	_loaderTimeout, _ := appConfig.Get("SETTINGS", "MSGTIMEOUT")
+	loaderTimeout, _ := strconv.Atoi(_loaderTimeout)
+
+	_loaderCountout, _ := appConfig.Get("SETTINGS", "MSGCOUNTOUT")
+	loaderCountout, _ := strconv.Atoi(_loaderCountout)
+
+	_loaderTimeoutLong, _ := appConfig.Get("SETTINGS", "MSGTIMEOUTLONG")
+	loaderTimeoutLong, _ := strconv.Atoi(_loaderTimeoutLong)
+
 	log.Println("main: Initializing worker")
-	gosms.InitWorker(modems)
+	gosms.InitWorker(modems, bufferSize, bufferLow, loaderTimeout, loaderCountout, loaderTimeoutLong)
 
 	log.Println("main: Initializing server")
 	err = InitServer(serverhost, serverport)

@@ -69,21 +69,20 @@ planned features
 building from source
 ---------------------
 
+
 On Ubuntu
-    - go get github.com/haxpax/gosms
-    - cd $GOPATH/src/github.com/haxpax/gosms/dashboard
-    - go build
+- go get github.com/haxpax/gosms
+- cd $GOPATH/src/github.com/haxpax/gosms/dashboard
+- go build
 
 On Windows
-    - go get `github.com/haxpax/gosms`
-    - Setup GCC for go-sqlite3 package
-	    - Download MinGW from http://sourceforge.net/projects/mingw/
-	    - Add `C:\MinGW\bin` to PATH
-	    - run `mingw-get install gcc` from command line
-    - go build
+- go get `github.com/haxpax/gosms`
+- Setup GCC for go-sqlite3 package
+    - Download MinGW from http://sourceforge.net/projects/mingw/
+    - Add `C:\MinGW\bin` to PATH
+    - run `mingw-get install gcc` from command line
+- go build
 
-run dashboard executable
-Copy assets, templates, conf.ini, dashboard[.exe] if you want to move to another directory
-db.sqlite is created at first run if not present, copy that too if its there
+run dashboard executable. Copy assets, templates, conf.ini, dashboard[.exe] if you want to move to another directory db.sqlite is created at first run if not present, copy that too if its there
 
 

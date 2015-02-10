@@ -16,6 +16,7 @@ or have minimal requirements for personal / internal use and such
 - works with GSM modems
 - provides API over HTTP to push messages to gateway, just like the internet based gateways do
 - takes care of queuing, throttling and retrying
+- supports multiple devices at once
 
 ![gosms dashboard](https://raw.githubusercontent.com/haxpax/gosms/screenshot/screenshots/gosms.png)
 
@@ -73,11 +74,23 @@ planned features
 - Adding authentication for Dashboard
 - Send an email to admin on high failure rate
 
-building on windows
--------------------
+building from source
+---------------------
+
+
+On Ubuntu
+- go get github.com/haxpax/gosms
+- cd $GOPATH/src/github.com/haxpax/gosms/dashboard
+- go build
+
+On Windows
 - go get `github.com/haxpax/gosms`
 - Setup GCC for go-sqlite3 package
-	- Download MinGW from http://sourceforge.net/projects/mingw/
-	- Add `C:\MinGW\bin` to PATH
-	- run `mingw-get install gcc` from command line
+    - Download MinGW from http://sourceforge.net/projects/mingw/
+    - Add `C:\MinGW\bin` to PATH
+    - run `mingw-get install gcc` from command line
 - go build
+
+run dashboard executable. Copy assets, templates, conf.ini, dashboard[.exe] if you want to move to another directory db.sqlite is created at first run if not present, copy that too if its there
+
+

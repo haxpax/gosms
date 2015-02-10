@@ -2,6 +2,14 @@ gosms
 -----
 
 Your own local SMS gateway
+==========================
+
+What's the use ?
+----------------
+Can be used to send SMS,
+where you don't have access to internet or cannot use Web SMS gateways
+or want to save some money per SMS,
+or have minimal requirements for personal / internal use and such
 
 - deploy in less than 1 minute
 - supports Windows, GNU\Linux, Mac OS

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>gosms by haxpax</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>gosms</h1>
+        <h2>Your own local SMS gateway in Go</h2>
+        <a href="https://github.com/haxpax/gosms" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h2>
+<a id="gosms" class="anchor" href="#gosms" aria-hidden="true"><span class="octicon octicon-link"></span></a>gosms</h2>
+
+<p>Your own local SMS gateway</p>
+
+<ul>
+<li>deploy in less than 1 minute</li>
+<li>supports Windows, GNU\Linux, Mac OS</li>
+<li>works with GSM modems</li>
+<li>provides API over HTTP to push messages to gateway, just like the internet based gateways do</li>
+<li>takes care of queuing, throttling and retrying</li>
+<li>supports multiple devices at once</li>
+</ul>
+
+<p><img src="https://raw.githubusercontent.com/haxpax/gosms/screenshot/screenshots/gosms.png" alt="gosms dashboard"></p>
+
+<h2>
+<a id="deployment" class="anchor" href="#deployment" aria-hidden="true"><span class="octicon octicon-link"></span></a>deployment</h2>
+
+<ul>
+<li>Update conf.ini <code>[DEVICES]</code> section with your modem's COM port.
+for ex. <code>COM10</code> or <code>/dev/USBtty2</code>
+</li>
+<li>Run</li>
+</ul>
+
+<h2>
+<a id="api-specification" class="anchor" href="#api-specification" aria-hidden="true"><span class="octicon octicon-link"></span></a>API specification</h2>
+
+<ul>
+<li>/api/sms/ [<em>POST</em>]
+
+<ul>
+<li>param <strong>mobile</strong>
+
+<ul>
+<li>mobile number to send message to</li>
+<li>number should have contry code prefix</li>
+<li>for ex. +919890098900</li>
+</ul>
+</li>
+<li>param <strong>message</strong>
+
+<ul>
+<li>message text</li>
+<li>max length is limited to 160 characters</li>
+</ul>
+</li>
+<li>response</li>
+</ul>
+</li>
+</ul>
+
+<div class="highlight highlight-json"><pre>{
+  <span class="pl-s1"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>,
+  <span class="pl-s1"><span class="pl-pds">"</span>message<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>ok<span class="pl-pds">"</span></span>
+}</pre></div>
+
+<ul>
+<li>/api/logs/ [<em>GET</em>]
+
+<ul>
+<li>response</li>
+</ul>
+</li>
+</ul>
+
+<div class="highlight highlight-json"><pre>{
+  <span class="pl-s1"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>: <span class="pl-c1">200</span>,
+  <span class="pl-s1"><span class="pl-pds">"</span>message<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>ok<span class="pl-pds">"</span></span>,
+  <span class="pl-s1"><span class="pl-pds">"</span>summary<span class="pl-pds">"</span></span>: [ <span class="pl-c1">10</span>, <span class="pl-c1">50</span>, <span class="pl-c1">2</span> ],
+  <span class="pl-s1"><span class="pl-pds">"</span>daycount<span class="pl-pds">"</span></span>: { <span class="pl-s1"><span class="pl-pds">"</span>2015-01-22<span class="pl-pds">"</span></span>: <span class="pl-c1">10</span>, <span class="pl-s1"><span class="pl-pds">"</span>2015-01-23<span class="pl-pds">"</span></span>: <span class="pl-c1">25</span> },
+  <span class="pl-s1"><span class="pl-pds">"</span>messages<span class="pl-pds">"</span></span>: [
+    {
+      <span class="pl-s1"><span class="pl-pds">"</span>uuid<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>d04f17c4-a32c-11e4-827f-00ffcf62442b<span class="pl-pds">"</span></span>,
+      <span class="pl-s1"><span class="pl-pds">"</span>mobile<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>+1858111222<span class="pl-pds">"</span></span>,
+      <span class="pl-s1"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>: <span class="pl-s1"><span class="pl-pds">"</span>Hey! Just playing around with gosms.<span class="pl-pds">"</span></span>,
+      <span class="pl-s1"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>: <span class="pl-c1">1</span>
+    },
+  ]
+}</pre></div>
+
+<pre><code>- message status codes
+  - 0 : Pending
+  - 1 : Processed
+  - 2 : Error
+</code></pre>
+
+<h2>
+<a id="planned-features" class="anchor" href="#planned-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>planned features</h2>
+
+<ul>
+<li>Allowing multiple mobile numbers with a single message in <code>/api/sms/</code>
+</li>
+<li>CRUD support for messages, possibly support cancellation of message</li>
+<li>Authentication support for API</li>
+<li>Adding authentication for Dashboard</li>
+<li>Send an email to admin on high failure rate</li>
+</ul>
+
+<h2>
+<a id="building-from-source" class="anchor" href="#building-from-source" aria-hidden="true"><span class="octicon octicon-link"></span></a>building from source</h2>
+
+<p>On Ubuntu</p>
+
+<ul>
+<li>go get github.com/haxpax/gosms</li>
+<li>cd $GOPATH/src/github.com/haxpax/gosms/dashboard</li>
+<li>go build</li>
+</ul>
+
+<p>On Windows</p>
+
+<ul>
+<li>go get <code>github.com/haxpax/gosms</code>
+</li>
+<li>Setup GCC for go-sqlite3 package
+
+<ul>
+<li>Download MinGW from <a href="http://sourceforge.net/projects/mingw/">http://sourceforge.net/projects/mingw/</a>
+</li>
+<li>Add <code>C:\MinGW\bin</code> to PATH</li>
+<li>run <code>mingw-get install gcc</code> from command line</li>
+</ul>
+</li>
+<li>go build</li>
+</ul>
+
+<p>run dashboard executable. Copy assets, templates, conf.ini, dashboard[.exe] if you want to move to another directory db.sqlite is created at first run if not present, copy that too if its there</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/haxpax/gosms/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/haxpax/gosms/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/haxpax/gosms"></a> is maintained by <a href="https://github.com/haxpax">haxpax</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-58937177-2");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>

@@ -2,7 +2,7 @@ FROM ubuntu:14.04
 MAINTAINER Omie <intelomkar@gmail.com>
 
 RUN apt-get update
-RUN apt-get install build-essential
+RUN apt-get install -y build-essential
 RUN apt-get install -y curl git
 
 RUN curl -s https://storage.googleapis.com/golang/go1.4.2.linux-amd64.tar.gz | tar -v -C /usr/local/ -xz

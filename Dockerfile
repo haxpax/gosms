@@ -16,7 +16,7 @@ RUN go get github.com/haxpax/gosms
 ADD . /go/src/github.com/haxpax/gosms
 
 WORKDIR /go/src/github.com/haxpax/gosms
-run go get
+RUN go get
 
 WORKDIR /go/src/github.com/haxpax/gosms/dashboard
 RUN go install github.com/haxpax/gosms/dashboard

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/haxpax/gosms"
+	"github.com/haxpax/gosms/modem"
 	"log"
 	"os"
 	"strconv"
@@ -38,7 +39,7 @@ func main() {
 		_port, _ := appConfig.Get(dev, "COMPORT")
 		_baud := 115200 //appConfig.Get(dev, "BAUDRATE")
 		_devid, _ := appConfig.Get(dev, "DEVID")
-		m := &gosms.GSMModem{Port: _port, Baud: _baud, Devid: _devid}
+		m := modem.New(_port, _baud, _devid)
 		modems = append(modems, m)
 	}
 

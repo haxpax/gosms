@@ -1,9 +1,14 @@
 package gosms
 
 import (
+	"github.com/haxpax/gosms/modem"
 	"log"
+	"strings"
 	"time"
 )
+
+//TODO: should be configurable
+const SMSRetryLimit = 3
 
 const (
 	SMSPending   = iota // 0
@@ -31,7 +36,7 @@ var messageLoaderTimeout time.Duration
 var messageLoaderCountout int
 var messageLoaderLongTimeout time.Duration
 
-func InitWorker(modems []*GSMModem, bufferSize, bufferLow, loaderTimeout, countOut, loaderLongTimeout int) {
+func InitWorker(modems []*modem.GSMModem, bufferSize, bufferLow, loaderTimeout, countOut, loaderLongTimeout int) {
 	log.Println("--- InitWorker")
 
 	bufferMaxSize = bufferSize
@@ -53,10 +58,10 @@ func InitWorker(modems []*GSMModem, bufferSize, bufferLow, loaderTimeout, countO
 		modem := modems[i]
 		err := modem.Connect()
 		if err != nil {
-			log.Println("InitWorker: error connecting", modem.Devid, err)
+			log.Println("InitWorker: error connecting", modem.DeviceId, err)
 			continue
 		}
-		go modem.ProcessMessages()
+		go processMessages(modem)
 	}
 	go messageLoader(bufferMaxSize, bufferLowCount)
 }
@@ -120,5 +125,37 @@ func messageLoader(bufferSize, minFill int) {
 				messages <- msg
 			}
 		}
+	}
+}
+
+func processMessages(modem *modem.GSMModem) {
+	defer func() {
+		log.Println("--- deferring ProcessMessage")
+	}()
+
+	//log.Println("--- ProcessMessage")
+	for {
+		message := <-messages
+		log.Println("processing: ", message.UUID, modem.DeviceId)
+
+		status := modem.SendSMS(message.Mobile, message.Body)
+		if strings.HasSuffix(status, "OK\r\n") {
+			message.Status = SMSProcessed
+		} else if strings.HasSuffix(status, "ERROR\r\n") {
+			message.Status = SMSError
+		} else {
+			message.Status = SMSPending
+		}
+		message.Device = modem.DeviceId
+		message.Retries++
+		updateMessageStatus(message)
+		if message.Status != SMSProcessed && message.Retries < SMSRetryLimit {
+			// push message back to queue until either it is sent successfully or
+			// retry count is reached
+			// I can't push it to channel directly. Doing so may cause the sms to be in
+			// the queue twice. I don't want that
+			EnqueueMessage(&message, false)
+		}
+		time.Sleep(5 * time.Microsecond)
 	}
 }

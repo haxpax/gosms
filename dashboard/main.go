@@ -33,7 +33,7 @@ func main() {
 	numDevices, _ := strconv.Atoi(_numDevices)
 	log.Println("main: number of devices: ", numDevices)
 
-	var modems []*gosms.GSMModem
+	var modems []*modem.GSMModem
 	for i := 0; i < numDevices; i++ {
 		dev := fmt.Sprintf("DEVICE%v", i)
 		_port, _ := appConfig.Get(dev, "COMPORT")

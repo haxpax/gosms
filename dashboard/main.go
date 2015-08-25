@@ -6,10 +6,12 @@ import (
 	"github.com/haxpax/gosms/modem"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 )
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	log.Println("main: ", "Initializing gosms")
 	//load the config, abort if required config is not preset

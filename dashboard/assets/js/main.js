@@ -15,7 +15,9 @@ $(function() {
             return SMSStatus[data];
           },
           bUseRendered: false
-        }
+        },
+        { "data": "created_at" },
+        { "data": "updated_at" }
     ]
   });
   

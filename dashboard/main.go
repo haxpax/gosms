@@ -29,6 +29,9 @@ func main() {
 	serverhost, _ := appConfig.Get("SETTINGS", "SERVERHOST")
 	serverport, _ := appConfig.Get("SETTINGS", "SERVERPORT")
 
+	serverusername, _ := appConfig.Get("SETTINGS", "USERNAME")
+	serverpassword, _ := appConfig.Get("SETTINGS", "PASSWORD")
+
 	_numDevices, _ := appConfig.Get("SETTINGS", "DEVICES")
 	numDevices, _ := strconv.Atoi(_numDevices)
 	log.Println("main: number of devices: ", numDevices)
@@ -62,7 +65,7 @@ func main() {
 	gosms.InitWorker(modems, bufferSize, bufferLow, loaderTimeout, loaderCountout, loaderTimeoutLong)
 
 	log.Println("main: Initializing server")
-	err = InitServer(serverhost, serverport)
+	err = InitServer(serverhost, serverport, serverusername, serverpassword)
 	if err != nil {
 		log.Println("main: ", "Error starting server: ", err.Error(), " Aborting")
 		os.Exit(1)

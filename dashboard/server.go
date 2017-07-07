@@ -124,7 +124,7 @@ func InitServer(host string, port string, username string, password string) erro
 	// all API handlers
 	api := r.PathPrefix("/api").Subrouter()
 	api.Methods("GET").Path("/logs/").HandlerFunc(use(getLogsHandler, basicAuth))
-	api.Methods("POST").Path("/sms/").HandlerFunc(use(getLogsHandler, basicAuth))
+	api.Methods("POST").Path("/sms/").HandlerFunc(use(sendSMSHandler, basicAuth))
 
 	http.Handle("/", r)
 

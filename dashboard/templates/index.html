@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,84 +11,91 @@
 
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
-		<link href="assets/css/dataTables.bootstrap.css" rel="stylesheet">
+    <link href="assets/css/dataTables.bootstrap.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
 
     <script src="assets/js/jquery-1.11.2.min.js"></script>
-		
-		<!--[if lte IE 8]>
-			<script language="javascript" type="text/javascript" src="assets/js/excanvas.min.js"></script>
-		<![endif]-->
-		
+
+    <!--[if lte IE 8]>
+    <script language="javascript" type="text/javascript" src="assets/js/excanvas.min.js"></script>
+    <![endif]-->
+
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-  </head>
+</head>
 
-  <body>
-    <div class="container">
-			<div class="row">
-				<div class="col-md-12">
-					<h1 class="title">gosms</h1>
-					<p>Send text messages via modem</p>
-				</div>
-			</div>
-      <div class="row">
-				<div class="col-md-8 main">
-					<div class="row charts">
-            <div class="col-md-6">
-              <div id="barChart"></div>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="title">gosms</h1>
+            <p>Send text messages via modem</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-8 main">
+            <div class="row charts">
+                <div class="col-md-6">
+                    <div id="barChart"></div>
+                </div>
+                <div class="col-md-6">
+                    <div id="pieChart"></div>
+                </div>
             </div>
-            <div class="col-md-6">
-              <div id="pieChart"></div>
+        </div>
+        <div class="col-md-4 sidebar">
+            <h4>Try sending an SMS</h4>
+            <form name="testSMS" id="testSMS" action="/api/sms/" method="POST">
+                <div class="form-group">
+                    <label for="mobile">Mobile</label>
+                    <input type="text" class="form-control" name="mobile" placeholder="+919890098900">
+                </div>
+                <div class="form-group">
+                    <label for="mobile">Message</label>
+                    <textarea class="form-control" name="message" placeholder="A message from GoSMS !"></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary pull-right">
+                        <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> SEND
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h4>SMS Logs</h4>
+            <div class="table-responsive">
+                <table class="table" id="smsdata">
+                    <thead>
+                    <tr>
+                        <th>mobile</th>
+                        <th>message</th>
+                        <th>status</th>
+                        <th>created at</th>
+                        <th>last update</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
-					</div>
-					<div class="clearfix"></div>
-					<h4>SMS Logs</h4>
-          <div class="table-responsive">
-            <table class="table" id="smsdata">
-              <thead>
-                <tr>
-                  <th>mobile</th>
-                  <th>message</th>
-                  <th>status</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-				</div>
-				<div class="col-md-4 sidebar">
-					<h4>Try sending an SMS</h4>
-					<form name="testSMS" id="testSMS" action="/api/sms/" method="POST">
-						<div class="form-group">
-							<label for="mobile">Mobile</label>
-							<input type="text" class="form-control" name="mobile" placeholder="+919890098900">
-						</div>
-						<div class="form-group">
-							<label for="mobile">Message</label>
-							<textarea class="form-control" name="message" placeholder="A message from GoSMS !"></textarea>
-						</div>
-						<div class="form-group">
-							<button type="submit" class="btn btn-primary pull-right">
-								<span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> SEND
-							</button>							
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-		<div class="footer"></div>		
-		<script src="assets/js/jquery.dataTables.min.js"></script>
-		<script src="assets/js/dataTables.bootstrap.js"></script>
-		<script src="assets/js/jquery.flot.min.js"></script>
-		<script src="assets/js/jquery.flot.categories.min.js"></script>
-		<script src="assets/js/jquery.flot.pie.min.js"></script>
-    <script src="assets/js/jquery.flot.resize.min.js"></script>
-    <script src="assets/js/moment.min.js"></script>
-		<script src="assets/js/main.js"></script>
-  </body>
+        </div>
+    </div>
+</div>
+<div class="footer"></div>
+
+<script src="assets/js/jquery.dataTables.min.js"></script>
+<script src="assets/js/dataTables.bootstrap.js"></script>
+<script src="assets/js/jquery.flot.min.js"></script>
+<script src="assets/js/jquery.flot.categories.min.js"></script>
+<script src="assets/js/jquery.flot.pie.min.js"></script>
+<script src="assets/js/jquery.flot.resize.min.js"></script>
+<script src="assets/js/moment.min.js"></script>
+<script src="assets/js/main.js"></script>
+
+</body>
 </html>
 

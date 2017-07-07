@@ -10,6 +10,8 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
+	"encoding/base64"
 )
 
 //reposne structure to /sms
@@ -29,6 +31,9 @@ type SMSDataResponse struct {
 
 // Cache templates
 var templates = template.Must(template.ParseFiles("./templates/index.html"))
+
+var authUsername string
+var authPassword string
 
 /* dashboard handlers */
 
@@ -102,21 +107,24 @@ func getLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 /* end API handlers */
 
-func InitServer(host string, port string) error {
+func InitServer(host string, port string, username string, password string) error {
 	log.Println("--- InitServer ", host, port)
+
+	authUsername = username
+	authPassword = password
 
 	r := mux.NewRouter()
 	r.StrictSlash(true)
 
-	r.HandleFunc("/", indexHandler)
+	r.HandleFunc("/", use(indexHandler, basicAuth))
 
 	// handle static files
-	r.HandleFunc(`/assets/{path:[a-zA-Z0-9=\-\/\.\_]+}`, handleStatic)
+	r.HandleFunc(`/assets/{path:[a-zA-Z0-9=\-\/\.\_]+}`, use(handleStatic, basicAuth))
 
 	// all API handlers
 	api := r.PathPrefix("/api").Subrouter()
-	api.Methods("GET").Path("/logs/").HandlerFunc(getLogsHandler)
-	api.Methods("POST").Path("/sms/").HandlerFunc(sendSMSHandler)
+	api.Methods("GET").Path("/logs/").HandlerFunc(use(getLogsHandler, basicAuth))
+	api.Methods("POST").Path("/sms/").HandlerFunc(use(sendSMSHandler, basicAuth))
 
 	http.Handle("/", r)
 
@@ -124,4 +132,44 @@ func InitServer(host string, port string) error {
 	log.Println("listening on: ", bind)
 	return http.ListenAndServe(bind, nil)
 
+}
+
+// See https://gist.github.com/elithrar/7600878#comment-955958 for how to extend it to suit simple http.Handler's
+func use(h http.HandlerFunc, middleware ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
+	for _, m := range middleware {
+		h = m(h)
+	}
+
+	return h
+}
+
+func basicAuth(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if len(authUsername) == 0 {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+
+		s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+		if len(s) != 2 {
+			http.Error(w, "Not authorized", 401)
+			return
+		}
+
+		b, err := base64.StdEncoding.DecodeString(s[1])
+		if err != nil {
+			http.Error(w, err.Error(), 401)
+			return
+		}
+
+		pair := strings.SplitN(string(b), ":", 2)
+		if len(pair) != 2 || pair[0] != authUsername || pair[1] != authPassword {
+			http.Error(w, "Not authorized", 401)
+			return
+		}
+
+		h.ServeHTTP(w, r)
+	}
 }

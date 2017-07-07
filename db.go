@@ -119,7 +119,7 @@ func GetMessages(filter string) ([]SMS, error) {
 	   simply append it to the query to get desired set out of database
 	*/
 	log.Println("--- GetMessages")
-	query := fmt.Sprintf("SELECT uuid, message, mobile, status, retries, device FROM messages %v", filter)
+	query := fmt.Sprintf("SELECT uuid, message, mobile, status, retries, device, created_at, updated_at FROM messages %v", filter)
 	log.Println("GetMessages: ", query)
 
 	rows, err := db.Query(query)
@@ -133,7 +133,7 @@ func GetMessages(filter string) ([]SMS, error) {
 
 	for rows.Next() {
 		sms := SMS{}
-		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status, &sms.Retries, &sms.Device)
+		rows.Scan(&sms.UUID, &sms.Body, &sms.Mobile, &sms.Status, &sms.Retries, &sms.Device, &sms.CreatedAt, &sms.UpdatedAt)
 		messages = append(messages, sms)
 	}
 	rows.Close()

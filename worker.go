@@ -17,12 +17,14 @@ const (
 )
 
 type SMS struct {
-	UUID    string `json:"uuid"`
-	Mobile  string `json:"mobile"`
-	Body    string `json:"body"`
-	Status  int    `json:"status"`
-	Retries int    `json:"retries"`
-	Device  string `json:"device"`
+	UUID      string `json:"uuid"`
+	Mobile    string `json:"mobile"`
+	Body      string `json:"body"`
+	Status    int    `json:"status"`
+	Retries   int    `json:"retries"`
+	Device    string `json:"device"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 var messages chan SMS

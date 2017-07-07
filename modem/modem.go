@@ -90,6 +90,8 @@ func (m *GSMModem) Read(n int) string {
 			output = string(buf[:c])
 		}
 	}
+
+	log.Printf("--- Read(%d): %v", n, m.transposeLog(output))
 	return output
 }
 

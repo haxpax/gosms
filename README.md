@@ -84,6 +84,11 @@ On Ubuntu
 - go get
 - go build
 
+On Docker
+- git clone https://github.com/haxpax/gosms.git
+- docker build -t gosms:latest .     
+- docker run -it --rm -p 8951:8951 gosms:latest   
+
 On Windows
 - Setup GCC for go-sqlite3 package
     - For 32 bit
